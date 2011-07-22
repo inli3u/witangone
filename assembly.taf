@@ -1,0 +1,2783 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE TAF SYSTEM "tango.dtd">
+<TAF Version="0x02000002">
+  <Comments/>
+  <Program>
+    <ActionRef Ref="Create_Admin8"/>
+    <ActionRef Ref="Admin8"/>
+    <ActionRef Ref="debug"/>
+    <ActionRef Ref="If">
+      <ActionRef Ref="assemblyinfo"/>
+      <ActionRef Ref="events2"/>
+      <ActionRef Ref="events3"/>
+      <ActionRef Ref="ending2008members"/>
+      <ActionRef Ref="For_Loop">
+        <ActionRef Ref="new"/>
+      </ActionRef>
+      <ActionRef Ref="Results1"/>
+      <ActionRef Ref="assembly_main"/>
+    </ActionRef>
+    <ActionRef Ref="ElseIf_newmember">
+      <ActionRef Ref="If_office">
+        <ActionRef Ref="If1">
+          <ActionRef Ref="assembly_add_select"/>
+          <ActionRef Ref="Return"/>
+        </ActionRef>
+        <ActionRef Ref="Else4">
+          <ActionRef Ref="Assign_assembly_id1"/>
+        </ActionRef>
+      </ActionRef>
+      <ActionRef Ref="Else3">
+        <ActionRef Ref="Assign_assembly_id2"/>
+      </ActionRef>
+      <ActionRef Ref="assemblyinfo2"/>
+      <ActionRef Ref="states"/>
+      <ActionRef Ref="countries"/>
+      <ActionRef Ref="assembly_add"/>
+    </ActionRef>
+    <ActionRef Ref="ElseIf_insert">
+      <ActionRef Ref="Assign"/>
+      <ActionRef Ref="Insert_member"/>
+      <ActionRef Ref="memberid"/>
+      <ActionRef Ref="Insert_history"/>
+      <ActionRef Ref="Insert_areport"/>
+      <ActionRef Ref="If_send_info">
+        <ActionRef Ref="If_email_address">
+          <ActionRef Ref="Mail"/>
+        </ActionRef>
+      </ActionRef>
+      <ActionRef Ref="get_jml"/>
+      <ActionRef Ref="get_supreme"/>
+      <ActionRef Ref="assInfo"/>
+      <ActionRef Ref="If_jml_found">
+        <ActionRef Ref="Mail1"/>
+      </ActionRef>
+      <ActionRef Ref="message"/>
+      <ActionRef Ref="messagehtml"/>
+    </ActionRef>
+    <ActionRef Ref="ElseIf_status">
+      <ActionRef Ref="matches2"/>
+      <ActionRef Ref="loop_matches2">
+        <ActionRef Ref="changer"/>
+        <ActionRef Ref="girl2"/>
+        <ActionRef Ref="code2"/>
+        <ActionRef Ref="addrows2"/>
+      </ActionRef>
+      <ActionRef Ref="Assign3"/>
+      <ActionRef Ref="sort2"/>
+      <ActionRef Ref="codes3"/>
+      <ActionRef Ref="assembly_status"/>
+    </ActionRef>
+    <ActionRef Ref="ElseIf_updatestatus">
+      <ActionRef Ref="If_not_allowed">
+        <ActionRef Ref="message7"/>
+        <ActionRef Ref="messagehtml7"/>
+      </ActionRef>
+      <ActionRef Ref="Else2">
+        <ActionRef Ref="Insert_hisotry"/>
+        <ActionRef Ref="Update_areport"/>
+        <ActionRef Ref="message2"/>
+        <ActionRef Ref="messagehtml2"/>
+      </ActionRef>
+    </ActionRef>
+    <ActionRef Ref="ElseIf_statuspast">
+      <ActionRef Ref="matches"/>
+      <ActionRef Ref="loop_matches">
+        <ActionRef Ref="changer2"/>
+        <ActionRef Ref="girl"/>
+        <ActionRef Ref="code"/>
+        <ActionRef Ref="addrows"/>
+      </ActionRef>
+      <ActionRef Ref="Assign2"/>
+      <ActionRef Ref="sort"/>
+      <ActionRef Ref="codes2"/>
+      <ActionRef Ref="assembly_status2"/>
+    </ActionRef>
+    <ActionRef Ref="ElseIf_affiliate">
+      <ActionRef Ref="assembly_affiliate"/>
+    </ActionRef>
+    <ActionRef Ref="ElseIf_affiliation">
+      <ActionRef Ref="Insert"/>
+      <ActionRef Ref="Insert2"/>
+      <ActionRef Ref="message3"/>
+      <ActionRef Ref="messagehtml3"/>
+    </ActionRef>
+    <ActionRef Ref="ElseIf_addevent">
+      <ActionRef Ref="assembly_addevent"/>
+    </ActionRef>
+    <ActionRef Ref="ElseIf_eventinsert">
+      <ActionRef Ref="add_12_to_pm_events"/>
+      <ActionRef Ref="Insert3"/>
+      <ActionRef Ref="message4"/>
+      <ActionRef Ref="messagehtml4"/>
+    </ActionRef>
+    <ActionRef Ref="ElseIf_password">
+      <ActionRef Ref="If_not_authorized">
+        <ActionRef Ref="message1"/>
+        <ActionRef Ref="messagehtml1"/>
+      </ActionRef>
+      <ActionRef Ref="Else1">
+        <ActionRef Ref="Presentation"/>
+      </ActionRef>
+    </ActionRef>
+    <ActionRef Ref="ElseIf_changepassword">
+      <ActionRef Ref="If_they_match">
+        <ActionRef Ref="Update"/>
+        <ActionRef Ref="message5"/>
+        <ActionRef Ref="messagehtml5"/>
+      </ActionRef>
+      <ActionRef Ref="Else">
+        <ActionRef Ref="message6"/>
+        <ActionRef Ref="messagehtml6"/>
+      </ActionRef>
+    </ActionRef>
+    <ActionRef Ref="ElseIf_eventview">
+      <ActionRef Ref="event"/>
+      <ActionRef Ref="Results"/>
+    </ActionRef>
+    <ActionRef Ref="ElseIf_editevent">
+      <ActionRef Ref="event2"/>
+      <ActionRef Ref="Results2"/>
+    </ActionRef>
+    <ActionRef Ref="ElseIf_updateevent">
+      <ActionRef Ref="add_12_to_pm_events2"/>
+      <ActionRef Ref="Update2"/>
+      <ActionRef Ref="event3"/>
+      <ActionRef Ref="Results3"/>
+    </ActionRef>
+  </Program>
+  <Actions>
+    <CreateObjectAction ID="Create_Admin8" Sig="cobj">
+      <ObjectIdentity>TCF://Admin.tcf</ObjectIdentity>
+      <ObjectName>Admin</ObjectName>
+      <ObjectInstance ConnectToExisting="False">
+        <Name>Checker</Name>
+        <Scope>Request</Scope>
+      </ObjectInstance>
+      <UserInfo Encrypted="True">
+        <UserName/>
+        <Password/>
+      </UserInfo>
+    </CreateObjectAction>
+    <CallMethodAction ID="Admin8" MethodID="Admin" Sig="calm">
+      <ObjectIdentity>TCF://Admin.tcf</ObjectIdentity>
+      <ObjectName>Admin</ObjectName>
+      <ObjectInstance>
+        <Name>Checker</Name>
+        <Scope>Request</Scope>
+      </ObjectInstance>
+      <MethodResult Description="Any" NativeType="_ANY" Type="Void">
+        <Name/>
+        <Scope/>
+      </MethodResult>
+      <CallParameterList/>
+    </CallMethodAction>
+    <ResultAction ID="debug" Sig="null">
+      <ResultsOutput Ref="debug.Results"/>
+    </ResultAction>
+    <IfAction Expanded="True" ID="If" Sig="if  ">
+      <Expression><![CDATA[(!LEN('<@ARG do>'))]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight/>
+        <Operator>iemp</Operator>
+      </ExpressionInfo>
+    </IfAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="assemblyinfo" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>assemblies</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>assemblies</TableName>
+          <ColumnName>assemblyidnum</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>assemblies</TableName>
+          <ColumnName>name</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="shor">
+          <TableName>assemblies</TableName>
+          <ColumnName>number</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="!CST">
+          <TableName/>
+          <ColumnName>assemblies.assemblyidnum</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>assemblies</TableName>
+          <ColumnName>assemblyidnum</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>assemblies</TableName>
+          <ColumnName>name</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>assemblies</TableName>
+          <ColumnName>number</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns/>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName/>
+          <ColumnName>assemblies.assemblyidnum</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@user$assembly]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <MaxRows>1</MaxRows>
+      <ResultSet Name="assemblyinfo" Type="Array"/>
+    </SearchAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="events2" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>calendar</TableName>
+        <TableName>assemblies</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>calendar</TableName>
+          <ColumnName>calendarEventID</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>calendar</TableName>
+          <ColumnName>eventTS</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>calendar</TableName>
+          <ColumnName>eventDesc</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>assemblies</TableName>
+          <ColumnName>assemblyidnum</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="shor">
+          <TableName>calendar</TableName>
+          <ColumnName>inviteType</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>calendar</TableName>
+          <ColumnName>invitorID</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>assemblies</TableName>
+          <ColumnName>assemblyid</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>calendar</TableName>
+          <ColumnName>calendarEventID</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>calendar</TableName>
+          <ColumnName>eventTS</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>calendar</TableName>
+          <ColumnName>eventDesc</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>assemblies</TableName>
+          <ColumnName>assemblyidnum</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns>
+        <OrderColumn>
+          <Ascending>true</Ascending>
+          <TableOwner/>
+          <TableName/>
+          <ColumnName>2</ColumnName>
+        </OrderColumn>
+      </OrderColumns>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>calendar</TableName>
+          <ColumnName>eventTS</ColumnName>
+          <Operator>gteq</Operator>
+          <Value><![CDATA[<@currenttimestamp>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>calendar</TableName>
+          <ColumnName>inviteType</ColumnName>
+          <Operator>iseq</Operator>
+          <Value>2</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>calendar</TableName>
+          <ColumnName>invitorID</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@user$adminassemid]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <JoinCriteria>
+        <JoinItem JoinType="Equal">
+          <FirstTable>assemblies</FirstTable>
+          <FirstColumn>assemblyid</FirstColumn>
+          <SecondTable>calendar</SecondTable>
+          <SecondColumn>invitorID</SecondColumn>
+        </JoinItem>
+      </JoinCriteria>
+      <StartRow>1</StartRow>
+      <MaxRows>10</MaxRows>
+      <ResultSet Name="events2" Type="Array"/>
+    </SearchAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="events3" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>calendar</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>calendar</TableName>
+          <ColumnName>calendarEventID</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>calendar</TableName>
+          <ColumnName>eventTS</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>calendar</TableName>
+          <ColumnName>eventDesc</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="shor">
+          <TableName>calendar</TableName>
+          <ColumnName>inviteType</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>calendar</TableName>
+          <ColumnName>invitorID</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>calendar</TableName>
+          <ColumnName>calendarEventID</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>calendar</TableName>
+          <ColumnName>eventTS</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>calendar</TableName>
+          <ColumnName>eventDesc</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns>
+        <OrderColumn>
+          <Ascending>true</Ascending>
+          <TableOwner/>
+          <TableName/>
+          <ColumnName>2</ColumnName>
+        </OrderColumn>
+      </OrderColumns>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>calendar</TableName>
+          <ColumnName>eventTS</ColumnName>
+          <Operator>gteq</Operator>
+          <Value><![CDATA[<@currenttimestamp>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>calendar</TableName>
+          <ColumnName>inviteType</ColumnName>
+          <Operator>iseq</Operator>
+          <Value>3</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>calendar</TableName>
+          <ColumnName>invitorID</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[<@left str="@@user$assembly" numchars="2">]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <MaxRows>10</MaxRows>
+      <ResultSet Name="events3" Type="Array"/>
+    </SearchAction>
+    <DirectDBMSAction DSID="loremipsum" DeploymentDSID="" ID="ending2008members" Sig="cust" UseDevelopmentDataSource="TRUE">
+      <Custom><![CDATA[select a2.jurisdiction,sum(a1.endingmembers) from dbo.annual_reports a1, dbo.assemblies a2 where a1.yearending = 2010 and a1.assemblyid = a2.assemblyid group by a2.jurisdiction]]></Custom>
+      <StartRow>1</StartRow>
+      <ResultSet Name="ending" Type="Array"/>
+    </DirectDBMSAction>
+    <ForAction Direction="Up" Expanded="True" ID="For_Loop" Sig="forl">
+      <Start>1</Start>
+      <Stop><![CDATA[<@numrows array="request$ending">]]></Stop>
+      <Increment>1</Increment>
+      <Scope>Request</Scope>
+      <LoopVariable>i</LoopVariable>
+    </ForAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="new" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>history</TableName>
+        <TableName>assemblies</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>history</TableName>
+          <ColumnName>historytransid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>history</TableName>
+          <ColumnName>datestampTS</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>history</TableName>
+          <ColumnName>changecode</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>assemblies</TableName>
+          <ColumnName>jurisdiction</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>assemblies</TableName>
+          <ColumnName>assemblyid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>history</TableName>
+          <ColumnName>assemblyid</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName/>
+          <ColumnName>COUNT(history.historytransid)</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns/>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>history</TableName>
+          <ColumnName>datestampTS</ColumnName>
+          <Operator>gthn</Operator>
+          <Value>12/31/2008</Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>history</TableName>
+          <ColumnName>changecode</ColumnName>
+          <Operator>isin</Operator>
+          <Value>4,6</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>assemblies</TableName>
+          <ColumnName>jurisdiction</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@request$ending[@@request$i,1]]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <JoinCriteria>
+        <JoinItem JoinType="Equal">
+          <FirstTable>assemblies</FirstTable>
+          <FirstColumn>assemblyid</FirstColumn>
+          <SecondTable>history</SecondTable>
+          <SecondColumn>assemblyid</SecondColumn>
+        </JoinItem>
+      </JoinCriteria>
+      <StartRow>1</StartRow>
+      <MaxRows>1</MaxRows>
+      <ResultSet Name="new" Type="Array"/>
+      <ResultsOutput Ref="new.Results"/>
+    </SearchAction>
+    <ResultAction ID="Results1" Sig="null">
+      <ResultsOutput Ref="Results1.Results"/>
+    </ResultAction>
+    <PresentationAction ID="assembly_main" Sig="pres">
+      <PagePath>assembly_main.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseIfAction Expanded="True" ID="ElseIf_newmember" Sig="elif">
+      <Expression><![CDATA[('<@ARG do>'='newmember')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight>newmember</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </ElseIfAction>
+    <IfAction Expanded="True" ID="If_office" Sig="if  ">
+      <Expression><![CDATA[('@@user$adminassemid'='-2')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[@@user$adminassemid]]></ExpLeft>
+        <ExpRight>-2</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </IfAction>
+    <IfAction Expanded="True" ID="If1" Sig="if  ">
+      <Expression><![CDATA[(!LEN('<@arg assembly_id>'))]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@arg assembly_id>]]></ExpLeft>
+        <ExpRight/>
+        <Operator>iemp</Operator>
+      </ExpressionInfo>
+    </IfAction>
+    <PresentationAction ID="assembly_add_select" Sig="pres">
+      <PagePath>assembly_add_select.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ReturnAction ID="Return" Sig="stop"/>
+    <ElseAction Expanded="True" ID="Else4" Sig="else"/>
+    <AssignAction ID="Assign_assembly_id1" Sig="asgn">
+      <AssignItem>
+        <Name>assembly_id_num</Name>
+        <Value><![CDATA[<@arg assembly_id>]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+    </AssignAction>
+    <ElseAction Expanded="True" ID="Else3" Sig="else"/>
+    <AssignAction ID="Assign_assembly_id2" Sig="asgn">
+      <AssignItem>
+        <Name>assembly_id_num</Name>
+        <Value><![CDATA[@@user$assembly]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+    </AssignAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="assemblyinfo2" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.assemblies</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.assemblies</TableName>
+          <ColumnName>assemblyidnum</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.assemblies</TableName>
+          <ColumnName>name</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="shor">
+          <TableName>dbo.assemblies</TableName>
+          <ColumnName>number</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="!CST">
+          <TableName/>
+          <ColumnName>dbo.assemblies.assemblyid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="!CST">
+          <TableName/>
+          <ColumnName>dbo.assemblies.assemblyidnum</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>dbo.assemblies</TableName>
+          <ColumnName>assemblyidnum</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.assemblies</TableName>
+          <ColumnName>name</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.assemblies</TableName>
+          <ColumnName>number</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName/>
+          <ColumnName>dbo.assemblies.assemblyid</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns/>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName/>
+          <ColumnName>dbo.assemblies.assemblyidnum</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@request$assembly_id_num]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <MaxRows>1</MaxRows>
+      <ResultSet Name="assemblyinfo" Type="Array"/>
+    </SearchAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="states" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.states</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="text">
+          <TableName>dbo.states</TableName>
+          <ColumnName>abbrev</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="text">
+          <TableName>dbo.states</TableName>
+          <ColumnName>name</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>dbo.states</TableName>
+          <ColumnName>abbrev</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.states</TableName>
+          <ColumnName>name</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns>
+        <OrderColumn>
+          <Ascending>true</Ascending>
+          <TableOwner/>
+          <TableName/>
+          <ColumnName>2</ColumnName>
+        </OrderColumn>
+      </OrderColumns>
+      <GroupColumns/>
+      <StartRow>1</StartRow>
+      <ResultSet Name="states" Type="Array"/>
+    </SearchAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="countries" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.country</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="text">
+          <TableName>dbo.country</TableName>
+          <ColumnName>countryid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.country</TableName>
+          <ColumnName>printable_name</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.country</TableName>
+          <ColumnName>name</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>dbo.country</TableName>
+          <ColumnName>countryid</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.country</TableName>
+          <ColumnName>printable_name</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns>
+        <OrderColumn>
+          <Ascending>true</Ascending>
+          <TableOwner/>
+          <TableName>dbo.country</TableName>
+          <ColumnName>name</ColumnName>
+        </OrderColumn>
+      </OrderColumns>
+      <GroupColumns/>
+      <StartRow>1</StartRow>
+      <ResultSet Name="countries" Type="Array"/>
+    </SearchAction>
+    <PresentationAction ID="assembly_add" Sig="pres">
+      <PagePath>assembly_add_test.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseIfAction ID="ElseIf_insert" Sig="elif">
+      <Expression><![CDATA[('<@ARG do>'='insert')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight>insert</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </ElseIfAction>
+    <AssignAction ID="Assign" Sig="asgn">
+      <AssignItem>
+        <Name>password</Name>
+        <Value><![CDATA[<@lower str='<@substring str="<@POSTARG firstname>" start="1" numchars="1">'><@lower str='<@substring str="<@POSTARG lastname>" start="1" numchars="1">'><@random low="1111" high="9999">]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+      <AssignItem>
+        <Name>username</Name>
+        <Value><![CDATA[<@lower str='<@substring str="<@POSTARG firstname>" start="1" numchars="1">'><@lower str='<@POSTARG lastname>'>]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+      <AssignItem>
+        <Name>username</Name>
+        <Value><![CDATA[<@keep str="@@request$username" chars="abcdefghijklmnopqrstuvwxyz">]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+    </AssignAction>
+    <InsertAction AutoCommit="True" DSID="loremipsum" DeploymentDSID="" ID="Insert_member" Sig="insr" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.members</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>members</TableName>
+          <ColumnName>lname</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>members</TableName>
+          <ColumnName>fname</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>members</TableName>
+          <ColumnName>address</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>members</TableName>
+          <ColumnName>city</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>members</TableName>
+          <ColumnName>state</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="text">
+          <TableName>members</TableName>
+          <ColumnName>country</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>members</TableName>
+          <ColumnName>zip</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>members</TableName>
+          <ColumnName>phone</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>members</TableName>
+          <ColumnName>email</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>members</TableName>
+          <ColumnName>birthdate</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>members</TableName>
+          <ColumnName>username</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>members</TableName>
+          <ColumnName>password</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="bool">
+          <TableName>members</TableName>
+          <ColumnName>hasImage</ColumnName>
+        </Column>
+      </DataDictionary>
+      <ValueList>
+        <ValueItem>
+          <Name>lname</Name>
+          <Value><![CDATA[<@POSTARG lastname>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>fname</Name>
+          <Value><![CDATA[<@POSTARG firstname>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>address</Name>
+          <Value><![CDATA[<@POSTARG address>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>city</Name>
+          <Value><![CDATA[<@POSTARG city>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>state</Name>
+          <Value><![CDATA[<@POSTARG state>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>country</Name>
+          <Value><![CDATA[<@POSTARG country>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>zip</Name>
+          <Value><![CDATA[<@POSTARG zip>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>phone</Name>
+          <Value><![CDATA[<@POSTARG phone>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>email</Name>
+          <Value><![CDATA[<@POSTARG email>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>birthdate</Name>
+          <Value><![CDATA[<@POSTARG birthdate>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>username</Name>
+          <Value><![CDATA[@@request$username]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>password</Name>
+          <Value><![CDATA[@@request$password]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>hasImage</Name>
+          <Value>0</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+      </ValueList>
+    </InsertAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="memberid" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.members</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>dbo.members</TableName>
+          <ColumnName>memberid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.members</TableName>
+          <ColumnName>lname</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.members</TableName>
+          <ColumnName>fname</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>dbo.members</TableName>
+          <ColumnName>birthdate</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.members</TableName>
+          <ColumnName>username</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.members</TableName>
+          <ColumnName>password</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>dbo.members</TableName>
+          <ColumnName>memberid</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns/>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>dbo.members</TableName>
+          <ColumnName>lname</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[<@POSTARG lastname>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>dbo.members</TableName>
+          <ColumnName>fname</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[<@POSTARG firstname>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>dbo.members</TableName>
+          <ColumnName>birthdate</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[<@POSTARG birthdate>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>dbo.members</TableName>
+          <ColumnName>username</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@request$username]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>dbo.members</TableName>
+          <ColumnName>password</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@request$password]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <MaxRows>1</MaxRows>
+      <ResultSet Name="memberid" Type="Array"/>
+    </SearchAction>
+    <InsertAction AutoCommit="True" DSID="loremipsum" DeploymentDSID="" ID="Insert_history" Sig="insr" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.history</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>history</TableName>
+          <ColumnName>memberid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>history</TableName>
+          <ColumnName>changecode</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>history</TableName>
+          <ColumnName>assemblyid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>history</TableName>
+          <ColumnName>datestampTS</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>history</TableName>
+          <ColumnName>dateInsertedTS</ColumnName>
+        </Column>
+      </DataDictionary>
+      <ValueList>
+        <ValueItem>
+          <Name>memberid</Name>
+          <Value><![CDATA[@@request$memberid[1,1]]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>changecode</Name>
+          <Value>4</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>assemblyid</Name>
+          <Value><![CDATA[<@POSTARG assemblyid>]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>datestampTS</Name>
+          <Value><![CDATA[<@POSTARG initiation>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>dateInsertedTS</Name>
+          <Value><![CDATA[<@currenttimestamp>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+      </ValueList>
+    </InsertAction>
+    <InsertAction AutoCommit="True" DSID="loremipsum" DeploymentDSID="" ID="Insert_areport" Sig="insr" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.annual_reports_membership</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>annual_reports_membership</TableName>
+          <ColumnName>assemblyid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>annual_reports_membership</TableName>
+          <ColumnName>memberid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>annual_reports_membership</TableName>
+          <ColumnName>status</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>annual_reports_membership</TableName>
+          <ColumnName>yearrpt</ColumnName>
+        </Column>
+      </DataDictionary>
+      <ValueList>
+        <ValueItem>
+          <Name>assemblyid</Name>
+          <Value><![CDATA[<@POSTARG assemblyid>]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>memberid</Name>
+          <Value><![CDATA[@@request$memberid[1,1]]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>status</Name>
+          <Value>4</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>yearrpt</Name>
+          <Value><![CDATA[<@currentdate format=datetime:%Y>]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+      </ValueList>
+    </InsertAction>
+    <IfAction Expanded="True" ID="If_send_info" Sig="if  ">
+      <Expression><![CDATA[('<@POSTARG sendinfo>'='1')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@POSTARG sendinfo>]]></ExpLeft>
+        <ExpRight>1</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </IfAction>
+    <IfAction Expanded="True" ID="If_email_address" Sig="if  ">
+      <Expression><![CDATA[(LEN('<@POSTARG email>'))]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@POSTARG email>]]></ExpLeft>
+        <ExpRight/>
+        <Operator>nemp</Operator>
+      </ExpressionInfo>
+    </IfAction>
+    <MailAction ID="Mail" Sig="mail">
+      <Operation>SendMail</Operation>
+      <From><![CDATA["First Last" <email@address.org>]]></From>
+      <To><![CDATA["<@POSTARG firstname> <@POSTARG lastname>" <<@POSTARG email>>]]></To>
+      <CC/>
+      <BCC/>
+      <Subject><![CDATA[Subject!!!]]></Subject>
+      <Body><![CDATA[Dear <@POSTARG firstname>,
+
+Congratulations!
+
+Your username: @@request$username
+Your password: @@request$password
+
+
+Sincerely,
+Us]]></Body>
+      <ContentType>text/plain</ContentType>
+      <CharacterSet>iso-8859-1</CharacterSet>
+      <Wrap>72</Wrap>
+      <CustomHeader/>
+      <ParameterList/>
+      <Connection>
+        <SessionId/>
+        <CloseSession>True</CloseSession>
+        <Server/>
+        <BackupServer/>
+        <Protocol>SMTP</Protocol>
+        <Port/>
+      </Connection>
+    </MailAction>
+    <DirectDBMSAction DSID="loremipsum" DeploymentDSID="" ID="get_jml" Sig="cust" UseDevelopmentDataSource="TRUE">
+      <Custom><![CDATA[select j1.jmlFirstName,j1.jmlLastName,j1.jmlEmail,j1.jurisdictionID from dbo.jurisdictions j1
+inner join dbo.assemblies a1 on j1.jurisdictionID = a1.jurisdiction
+where a1.assemblyid = <@POSTARG assemblyid>]]></Custom>
+      <StartRow>1</StartRow>
+      <MaxRows>1</MaxRows>
+      <ResultSet Name="jml" Type="Array"/>
+    </DirectDBMSAction>
+    <DirectDBMSAction DSID="loremipsum" DeploymentDSID="" ID="get_supreme" Sig="cust" UseDevelopmentDataSource="TRUE">
+      <Custom><![CDATA[select InspectorName, InspectorEmail from dbo.states where abbrev = '@@request$jml[1,4]']]></Custom>
+      <StartRow>1</StartRow>
+      <ResultSet Name="supreme" Type="Array"/>
+    </DirectDBMSAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="assInfo" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>assemblies</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>assemblies</TableName>
+          <ColumnName>assemblyidnum</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>assemblies</TableName>
+          <ColumnName>name</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="shor">
+          <TableName>assemblies</TableName>
+          <ColumnName>number</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>assemblies</TableName>
+          <ColumnName>assemblyid</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>assemblies</TableName>
+          <ColumnName>assemblyidnum</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>assemblies</TableName>
+          <ColumnName>name</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>assemblies</TableName>
+          <ColumnName>number</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns/>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>assemblies</TableName>
+          <ColumnName>assemblyid</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[<@POSTARG assemblyid>]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <MaxRows>1</MaxRows>
+      <ResultSet Name="assInfo" Type="Array"/>
+    </SearchAction>
+    <IfAction Expanded="True" ID="If_jml_found" Sig="if  ">
+      <Expression><![CDATA[('<@numrows array="request$jml">'>'0')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@numrows array="request$jml">]]></ExpLeft>
+        <ExpRight>0</ExpRight>
+        <Operator>gthn</Operator>
+      </ExpressionInfo>
+    </IfAction>
+    <MailAction ID="Mail1" Sig="mail">
+      <Operation>SendMail</Operation>
+      <From><![CDATA["First Last" <email@example.org>]]></From>
+      <To><![CDATA["<@var name='request$jml[1,1]'> <@var name='request$jml[1,2]'>" <<@var name='request$jml[1,3]'>><@ifnotempty value="@@request$supreme[1,1]">, "@@request$supreme[1,1]" <@@request$supreme[1,2]></@if>]]></To>
+      <CC/>
+      <BCC/>
+      <Subject><![CDATA[Success: New Member Added!]]></Subject>
+      <Body><![CDATA[The following new member was recently added:
+<@POSTARG firstname> <@POSTARG lastname>
+<@ARG address>
+<@ARG city> <@ARG state> <@ARG zip>
+<@ARG email>
+<@ARG phone>
+Birthdate: <@ARG birthdate>
+Initiation: <@POSTARG initiation>
+
+To assembly:
+@@request$assInfo[1,1] @@request$assInfo[1,2] @@request$assInfo[1,3]]]></Body>
+      <ContentType>text/plain</ContentType>
+      <CharacterSet>iso-8859-1</CharacterSet>
+      <Wrap/>
+      <CustomHeader/>
+      <ParameterList/>
+      <Connection>
+        <SessionId/>
+        <CloseSession>True</CloseSession>
+        <Server/>
+        <BackupServer/>
+        <Protocol>SMTP</Protocol>
+        <Port/>
+      </Connection>
+    </MailAction>
+    <AssignAction ID="message" Sig="asgn">
+      <AssignItem>
+        <Name>message</Name>
+        <Value><![CDATA[Member was successfully added.<p><a href="<@cgi><@appfile>">Return to Menu</a>]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+    </AssignAction>
+    <PresentationAction ID="messagehtml" Sig="pres">
+      <PagePath>message.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseIfAction ID="ElseIf_status" Sig="elif">
+      <Expression><![CDATA[('<@ARG do>'='status')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight>status</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </ElseIfAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="matches2" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>history</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>history</TableName>
+          <ColumnName>memberid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="">
+          <TableName>history</TableName>
+          <ColumnName>datestampTS</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="!CST">
+          <TableName/>
+          <ColumnName>history.assemblyid</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>history</TableName>
+          <ColumnName>memberid</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName/>
+          <ColumnName>MAX(history.datestampTS)</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns/>
+      <GroupColumns>
+        <GroupColumn>
+          <TableName>history</TableName>
+          <ColumnName>memberid</ColumnName>
+        </GroupColumn>
+      </GroupColumns>
+      <Criteria>
+        <CriteriaItem>
+          <TableName/>
+          <ColumnName>history.assemblyid</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@user$adminassemid]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <ResultSet Name="matches" Type="Array"/>
+    </SearchAction>
+    <ForAction Direction="Up" Expanded="True" ID="loop_matches2" Sig="forl">
+      <Start>1</Start>
+      <Stop><![CDATA[<@numrows array="request$matches">]]></Stop>
+      <Increment>1</Increment>
+      <Scope>Request</Scope>
+      <LoopVariable>i</LoopVariable>
+    </ForAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="changer" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.history</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="">
+          <TableName>dbo.history</TableName>
+          <ColumnName>changecode</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>dbo.history</TableName>
+          <ColumnName>memberid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>dbo.history</TableName>
+          <ColumnName>datestampTS</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>dbo.history</TableName>
+          <ColumnName>changecode</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns/>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>dbo.history</TableName>
+          <ColumnName>memberid</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@request$matches[@@request$i,1]]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>dbo.history</TableName>
+          <ColumnName>datestampTS</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@request$matches[@@request$i,2]]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <ResultSet Name="changer" Type="Array"/>
+    </SearchAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="girl2" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>members</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>members</TableName>
+          <ColumnName>memberid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>members</TableName>
+          <ColumnName>fname</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>members</TableName>
+          <ColumnName>lname</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>members</TableName>
+          <ColumnName>birthdate</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>members</TableName>
+          <ColumnName>memberid</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>members</TableName>
+          <ColumnName>fname</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>members</TableName>
+          <ColumnName>lname</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>members</TableName>
+          <ColumnName>birthdate</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns>
+        <OrderColumn>
+          <Ascending>true</Ascending>
+          <TableOwner/>
+          <TableName/>
+          <ColumnName>3</ColumnName>
+        </OrderColumn>
+        <OrderColumn>
+          <Ascending>true</Ascending>
+          <TableOwner/>
+          <TableName/>
+          <ColumnName>2</ColumnName>
+        </OrderColumn>
+      </OrderColumns>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>members</TableName>
+          <ColumnName>memberid</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@request$matches[@@request$i,1]]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <MaxRows>1</MaxRows>
+      <ResultSet Name="girl" Type="Array"/>
+    </SearchAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="code2" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <DataDictionary>
+        <Column ColumnType="0" DataType="!CST">
+          <TableName/>
+          <ColumnName>change_code.description</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="!CST">
+          <TableName/>
+          <ColumnName>change_code.changecode</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName/>
+          <ColumnName>change_code.description</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns/>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName/>
+          <ColumnName>change_code.changecode</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@request$changer[1,1]]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <MaxRows>1</MaxRows>
+      <ResultSet Name="code" Type="Array"/>
+    </SearchAction>
+    <ResultAction ID="addrows2" Sig="null">
+      <ResultsOutput Ref="addrows2.Results"/>
+    </ResultAction>
+    <AssignAction ID="Assign3" Sig="asgn">
+      <AssignItem>
+        <Name>members</Name>
+        <Value><![CDATA[<@filter array='request$members' expr="(#5 = Initiated) OR (#5 = Reinstated) OR (#5 = Affiliated)">]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+    </AssignAction>
+    <ResultAction ID="sort2" Sig="null">
+      <ResultsOutput Ref="sort2.Results"/>
+    </ResultAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="codes3" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.change_code</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>changecode</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>description</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>changecode</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>description</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns>
+        <OrderColumn>
+          <Ascending>true</Ascending>
+          <TableOwner/>
+          <TableName/>
+          <ColumnName>1</ColumnName>
+        </OrderColumn>
+      </OrderColumns>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>changecode</ColumnName>
+          <Operator>gthn</Operator>
+          <Value>3</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>changecode</ColumnName>
+          <Operator>lthn</Operator>
+          <Value>13</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>changecode</ColumnName>
+          <Operator>isnt</Operator>
+          <Value>5</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <ResultSet Name="codes" Type="Array"/>
+    </SearchAction>
+    <PresentationAction ID="assembly_status" Sig="pres">
+      <PagePath>assembly_status.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseIfAction ID="ElseIf_updatestatus" Sig="elif">
+      <Expression><![CDATA[('<@ARG do>'='updatestatus')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight>updatestatus</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </ElseIfAction>
+    <IfAction Expanded="True" ID="If_not_allowed" Sig="if  ">
+      <Expression><![CDATA[('@@user$adminlevel'>'-2') and ('<@datediff date1="<@ARG eventdate>" date2="1/1/2010">'<'0')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[@@user$adminlevel]]></ExpLeft>
+        <ExpRight>-2</ExpRight>
+        <Operator>gthn</Operator>
+      </ExpressionInfo>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@datediff date1="<@ARG eventdate>" date2="1/1/2010">]]></ExpLeft>
+        <ExpRight>0</ExpRight>
+        <Conjunction><![CDATA[and ]]></Conjunction>
+        <Operator>lthn</Operator>
+      </ExpressionInfo>
+    </IfAction>
+    <AssignAction ID="message7" Sig="asgn">
+      <AssignItem>
+        <Name>message</Name>
+        <Value><![CDATA[You are not allowed to add or edit events that have an event date before 1/1/2010 as this will affect Annual Report submissions.]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+    </AssignAction>
+    <PresentationAction ID="messagehtml7" Sig="pres">
+      <PagePath>message.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseAction Expanded="True" ID="Else2" Sig="else"/>
+    <InsertAction AutoCommit="True" DSID="loremipsum" DeploymentDSID="" ID="Insert_hisotry" Sig="insr" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.history</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>history</TableName>
+          <ColumnName>memberid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>history</TableName>
+          <ColumnName>changecode</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>history</TableName>
+          <ColumnName>assemblyid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="lcha">
+          <TableName>history</TableName>
+          <ColumnName>reason</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>history</TableName>
+          <ColumnName>datestampTS</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>history</TableName>
+          <ColumnName>dateInsertedTS</ColumnName>
+        </Column>
+      </DataDictionary>
+      <ValueList>
+        <ValueItem>
+          <Name>memberid</Name>
+          <Value><![CDATA[<@POSTARG member>]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>changecode</Name>
+          <Value><![CDATA[<@POSTARG code>]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>assemblyid</Name>
+          <Value><![CDATA[@@user$adminassemid]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>reason</Name>
+          <Value><![CDATA[<@POSTARG reason>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>datestampTS</Name>
+          <Value><![CDATA[<@POSTARG eventdate>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>dateInsertedTS</Name>
+          <Value><![CDATA[<@currenttimestamp>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+      </ValueList>
+    </InsertAction>
+    <UpdateAction DSID="loremipsum" DeploymentDSID="" ID="Update_areport" Sig="updt" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.annual_reports_membership</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="">
+          <TableName>dbo.annual_reports_membership</TableName>
+          <ColumnName>assemblyid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="">
+          <TableName>dbo.annual_reports_membership</TableName>
+          <ColumnName>memberid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>dbo.annual_reports_membership</TableName>
+          <ColumnName>status</ColumnName>
+        </Column>
+      </DataDictionary>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>dbo.annual_reports_membership</TableName>
+          <ColumnName>assemblyid</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@user$adminassemid]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>dbo.annual_reports_membership</TableName>
+          <ColumnName>memberid</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[<@POSTARG member>]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <ValueList>
+        <ValueItem>
+          <Name>status</Name>
+          <Value><![CDATA[<@POSTARG code>]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+      </ValueList>
+    </UpdateAction>
+    <AssignAction ID="message2" Sig="asgn">
+      <AssignItem>
+        <Name>message</Name>
+        <Value><![CDATA[Status was successfully updated.
+<@ifnotempty value='<@ARG from>'><p><a href="annrepsubmit.taf?do=2&year=<@ARG from>">Return to Annual Report</a></p></@if>
+<p><a href="<@cgi><@appfile>">Return to Menu</a></p>]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+    </AssignAction>
+    <PresentationAction ID="messagehtml2" Sig="pres">
+      <PagePath>message.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseIfAction Expanded="True" ID="ElseIf_statuspast" Sig="elif">
+      <Expression><![CDATA[('<@ARG do>'='statuspast')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight>statuspast</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </ElseIfAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="matches" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.history</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>dbo.history</TableName>
+          <ColumnName>memberid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>history</TableName>
+          <ColumnName>datestampTS</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>dbo.history</TableName>
+          <ColumnName>assemblyid</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>dbo.history</TableName>
+          <ColumnName>memberid</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName/>
+          <ColumnName>MAX(dbo.history.datestampTS)</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns/>
+      <GroupColumns>
+        <GroupColumn>
+          <TableName>dbo.history</TableName>
+          <ColumnName>memberid</ColumnName>
+        </GroupColumn>
+      </GroupColumns>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>dbo.history</TableName>
+          <ColumnName>assemblyid</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@user$adminassemid]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <ResultSet Name="matches" Type="Array"/>
+    </SearchAction>
+    <ForAction Direction="Up" ID="loop_matches" Sig="forl">
+      <Start>1</Start>
+      <Stop><![CDATA[<@numrows array="request$matches">]]></Stop>
+      <Increment>1</Increment>
+      <Scope>Request</Scope>
+      <LoopVariable>i</LoopVariable>
+    </ForAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="changer2" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.history</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>dbo.history</TableName>
+          <ColumnName>changecode</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>dbo.history</TableName>
+          <ColumnName>memberid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>dbo.history</TableName>
+          <ColumnName>datestampTS</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>dbo.history</TableName>
+          <ColumnName>changecode</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns/>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>dbo.history</TableName>
+          <ColumnName>memberid</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@request$matches[@@request$i,1]]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>dbo.history</TableName>
+          <ColumnName>datestampTS</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@request$matches[@@request$i,2]]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <ResultSet Name="changer" Type="Array"/>
+    </SearchAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="girl" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.members</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>dbo.members</TableName>
+          <ColumnName>memberid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.members</TableName>
+          <ColumnName>fname</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.members</TableName>
+          <ColumnName>lname</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>dbo.members</TableName>
+          <ColumnName>birthdate</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>dbo.members</TableName>
+          <ColumnName>memberid</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.members</TableName>
+          <ColumnName>fname</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.members</TableName>
+          <ColumnName>lname</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.members</TableName>
+          <ColumnName>birthdate</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns>
+        <OrderColumn>
+          <Ascending>true</Ascending>
+          <TableOwner/>
+          <TableName/>
+          <ColumnName>3</ColumnName>
+        </OrderColumn>
+        <OrderColumn>
+          <Ascending>true</Ascending>
+          <TableOwner/>
+          <TableName/>
+          <ColumnName>2</ColumnName>
+        </OrderColumn>
+      </OrderColumns>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>dbo.members</TableName>
+          <ColumnName>memberid</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@request$matches[@@request$i,1]]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <MaxRows>1</MaxRows>
+      <ResultSet Name="girl" Type="Array"/>
+    </SearchAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="code" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.change_code</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>description</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>changecode</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>description</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns/>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>changecode</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@request$changer[1,1]]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <MaxRows>1</MaxRows>
+      <ResultSet Name="code" Type="Array"/>
+    </SearchAction>
+    <ResultAction ID="addrows" Sig="null">
+      <ResultsOutput Ref="addrows.Results"/>
+    </ResultAction>
+    <AssignAction ID="Assign2" Sig="asgn">
+      <AssignItem>
+        <Name>members</Name>
+        <Value><![CDATA[<@filter array='request$members' expr="(#5 = Suspended) OR (#5 = Expelled) OR (#5 = Demitted) OR (#5 = Married) OR (#5 = Died) OR (#5 = 'Age Majority')">]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+    </AssignAction>
+    <ResultAction ID="sort" Sig="null">
+      <ResultsOutput Ref="sort.Results"/>
+    </ResultAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="codes2" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.change_code</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>changecode</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>description</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>changecode</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>description</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns>
+        <OrderColumn>
+          <Ascending>true</Ascending>
+          <TableOwner/>
+          <TableName/>
+          <ColumnName>1</ColumnName>
+        </OrderColumn>
+      </OrderColumns>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>changecode</ColumnName>
+          <Operator>gthn</Operator>
+          <Value>3</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>changecode</ColumnName>
+          <Operator>lthn</Operator>
+          <Value>13</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+        <CriteriaItem>
+          <Conjunction><![CDATA[and ]]></Conjunction>
+          <TableName>dbo.change_code</TableName>
+          <ColumnName>changecode</ColumnName>
+          <Operator>isnt</Operator>
+          <Value>5</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <ResultSet Name="codes" Type="Array"/>
+    </SearchAction>
+    <PresentationAction ID="assembly_status2" Sig="pres">
+      <PagePath>assembly_status.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseIfAction ID="ElseIf_affiliate" Sig="elif">
+      <Expression><![CDATA[('<@ARG do>'='affiliate')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight>affiliate</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </ElseIfAction>
+    <PresentationAction ID="assembly_affiliate" Sig="pres">
+      <PagePath>assembly_affiliate.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseIfAction ID="ElseIf_affiliation" Sig="elif">
+      <Expression><![CDATA[('<@ARG do>'='affiliation')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight>affiliation</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </ElseIfAction>
+    <InsertAction AutoCommit="True" DSID="loremipsum" DeploymentDSID="" ID="Insert" Sig="insr" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.history</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>history</TableName>
+          <ColumnName>memberid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>history</TableName>
+          <ColumnName>changecode</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>history</TableName>
+          <ColumnName>assemblyid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>history</TableName>
+          <ColumnName>datestampTS</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>history</TableName>
+          <ColumnName>dateInsertedTS</ColumnName>
+        </Column>
+      </DataDictionary>
+      <ValueList>
+        <ValueItem>
+          <Name>memberid</Name>
+          <Value><![CDATA[<@POSTARG memberid>]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>changecode</Name>
+          <Value>5</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>assemblyid</Name>
+          <Value><![CDATA[@@user$adminassemid]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>datestampTS</Name>
+          <Value><![CDATA[<@POSTARG affilationdate>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>dateInsertedTS</Name>
+          <Value><![CDATA[<@currenttimestamp>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+      </ValueList>
+    </InsertAction>
+    <InsertAction AutoCommit="True" DSID="loremipsum" DeploymentDSID="" ID="Insert2" Sig="insr" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.annual_reports_membership</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>annual_reports_membership</TableName>
+          <ColumnName>yearrpt</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>annual_reports_membership</TableName>
+          <ColumnName>assemblyid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>annual_reports_membership</TableName>
+          <ColumnName>memberid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>annual_reports_membership</TableName>
+          <ColumnName>status</ColumnName>
+        </Column>
+      </DataDictionary>
+      <ValueList>
+        <ValueItem>
+          <Name>yearrpt</Name>
+          <Value><![CDATA[<@POSTARG name="affilationdate" format="datetime:%Y">]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>assemblyid</Name>
+          <Value><![CDATA[@@user$adminassemid]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>memberid</Name>
+          <Value><![CDATA[<@POSTARG memberid>]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>status</Name>
+          <Value>5</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+      </ValueList>
+    </InsertAction>
+    <AssignAction ID="message3" Sig="asgn">
+      <AssignItem>
+        <Name>message</Name>
+        <Value><![CDATA[Member was successfully affiliated.<p><a href="<@cgi><@appfile>">Return to Menu</a>]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+    </AssignAction>
+    <PresentationAction ID="messagehtml3" Sig="pres">
+      <PagePath>message.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseIfAction Expanded="True" ID="ElseIf_addevent" Sig="elif">
+      <Expression><![CDATA[('<@ARG do>'='addevent')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight>addevent</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </ElseIfAction>
+    <PresentationAction ID="assembly_addevent" Sig="pres">
+      <PagePath>assembly_addevent.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseIfAction Expanded="True" ID="ElseIf_eventinsert" Sig="elif">
+      <Expression><![CDATA[('<@ARG do>'='eventinsert')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight>eventinsert</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </ElseIfAction>
+    <ResultAction ID="add_12_to_pm_events" Sig="null">
+      <ResultsOutput Ref="add_12_to_pm_events.Results"/>
+    </ResultAction>
+    <InsertAction AutoCommit="True" DSID="loremipsum" DeploymentDSID="" ID="Insert3" Sig="insr" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.calendar</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>calendar</TableName>
+          <ColumnName>inviteeID</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="shor">
+          <TableName>calendar</TableName>
+          <ColumnName>inviteType</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>calendar</TableName>
+          <ColumnName>eventTS</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>calendar</TableName>
+          <ColumnName>eventDesc</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="lcha">
+          <TableName>calendar</TableName>
+          <ColumnName>eventText</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>calendar</TableName>
+          <ColumnName>invitorID</ColumnName>
+        </Column>
+      </DataDictionary>
+      <ValueList>
+        <ValueItem>
+          <Name>inviteeID</Name>
+          <Value><![CDATA[@@user$adminuserid]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>inviteType</Name>
+          <Value>2</Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>eventTS</Name>
+          <Value><![CDATA[<@ARG eventDate> @@request$hour:<@ARG minute>:00]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>eventDesc</Name>
+          <Value><![CDATA[<@ARG eventName>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>eventText</Name>
+          <Value><![CDATA[<@ARG eventDesc>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>invitorID</Name>
+          <Value><![CDATA[@@user$adminassemid]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+      </ValueList>
+    </InsertAction>
+    <AssignAction ID="message4" Sig="asgn">
+      <AssignItem>
+        <Name>message</Name>
+        <Value><![CDATA[Event was successfully added.<p><a href="<@cgi><@appfile>">Return to Menu</a>]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+    </AssignAction>
+    <PresentationAction ID="messagehtml4" Sig="pres">
+      <PagePath>message.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseIfAction ID="ElseIf_password" Sig="elif">
+      <Expression><![CDATA[('<@ARG do>'='password')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight>password</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </ElseIfAction>
+    <IfAction Expanded="True" ID="If_not_authorized" Sig="if  ">
+      <Expression><![CDATA[('@@user$adminlevel'>'-1')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[@@user$adminlevel]]></ExpLeft>
+        <ExpRight>-1</ExpRight>
+        <Operator>gthn</Operator>
+      </ExpressionInfo>
+    </IfAction>
+    <AssignAction ID="message1" Sig="asgn">
+      <AssignItem>
+        <Name>message</Name>
+        <Value><![CDATA[You are not authorized to change your password. Only Supreme Inspectors can change passwords for Mother Advisors.<p><a href="<@cgi><@appfile>">Return to Menu</a>]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+    </AssignAction>
+    <PresentationAction ID="messagehtml1" Sig="pres">
+      <PagePath>message.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseAction Expanded="True" ID="Else1" Sig="else"/>
+    <PresentationAction ID="Presentation" Sig="pres">
+      <PagePath>assembly_password.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseIfAction ID="ElseIf_changepassword" Sig="elif">
+      <Expression><![CDATA[('<@ARG do>'='changepassword')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight>changepassword</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </ElseIfAction>
+    <IfAction Expanded="True" ID="If_they_match" Sig="if  ">
+      <Expression><![CDATA[('<@POSTARG pw1>'='<@POSTARG pw2>')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@POSTARG pw1>]]></ExpLeft>
+        <ExpRight><![CDATA[<@POSTARG pw2>]]></ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </IfAction>
+    <UpdateAction DSID="loremipsum" DeploymentDSID="" ID="Update" Sig="updt" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>users</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>users</TableName>
+          <ColumnName>userid</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>users</TableName>
+          <ColumnName>password</ColumnName>
+        </Column>
+      </DataDictionary>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>users</TableName>
+          <ColumnName>userid</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[@@user$adminuserid]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <ValueList>
+        <ValueItem>
+          <Name>password</Name>
+          <Value><![CDATA[<@POSTARG pw1>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+      </ValueList>
+    </UpdateAction>
+    <AssignAction ID="message5" Sig="asgn">
+      <AssignItem>
+        <Name>message</Name>
+        <Value><![CDATA[Your password was successfully updated.<p><a href="<@cgi><@appfile>">Return to Menu</a>]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+    </AssignAction>
+    <PresentationAction ID="messagehtml5" Sig="pres">
+      <PagePath>message.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseAction Expanded="True" ID="Else" Sig="else"/>
+    <AssignAction ID="message6" Sig="asgn">
+      <AssignItem>
+        <Name>message</Name>
+        <Value><![CDATA[The passwords you entered did not match. Please click the back button on your browser and try again.<p><a href="<@cgi><@appfile>">Return to Menu</a>]]></Value>
+        <Scope>Request</Scope>
+      </AssignItem>
+    </AssignAction>
+    <PresentationAction ID="messagehtml6" Sig="pres">
+      <PagePath>message.html</PagePath>
+      <ServerPath/>
+    </PresentationAction>
+    <ElseIfAction ID="ElseIf_eventview" Sig="elif">
+      <Expression><![CDATA[('<@ARG do>'='eventview')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight>eventview</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </ElseIfAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="event" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.calendar</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventTS</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventDesc</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="lcha">
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventText</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>calendarEventID</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventTS</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventDesc</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventText</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns/>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>calendarEventID</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[<@ARG eventID>]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <MaxRows>1</MaxRows>
+      <ResultSet Name="event" Type="Array"/>
+    </SearchAction>
+    <ResultAction ID="Results" Sig="null">
+      <ResultsOutput Ref="Results.Results"/>
+    </ResultAction>
+    <ElseIfAction ID="ElseIf_editevent" Sig="elif">
+      <Expression><![CDATA[('<@ARG do>'='editevent')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight>editevent</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </ElseIfAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="event2" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.calendar</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventTS</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventDesc</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="lcha">
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventText</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>calendarEventID</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventTS</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventDesc</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventText</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>calendarEventID</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns/>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>calendarEventID</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[<@ARG eventID>]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <MaxRows>1</MaxRows>
+      <ResultSet Name="event" Type="Array"/>
+    </SearchAction>
+    <ResultAction ID="Results2" Sig="null">
+      <ResultsOutput Ref="Results2.Results"/>
+    </ResultAction>
+    <ElseIfAction ID="ElseIf_updateevent" Sig="elif">
+      <Expression><![CDATA[('<@ARG do>'='updateevent')]]></Expression>
+      <ExpressionInfo>
+        <ExpLeft><![CDATA[<@ARG do>]]></ExpLeft>
+        <ExpRight>updateevent</ExpRight>
+        <Operator>iseq</Operator>
+      </ExpressionInfo>
+    </ElseIfAction>
+    <ResultAction ID="add_12_to_pm_events2" Sig="null">
+      <ResultsOutput Ref="add_12_to_pm_events2.Results"/>
+    </ResultAction>
+    <UpdateAction DSID="loremipsum" DeploymentDSID="" ID="Update2" Sig="updt" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>calendar</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="long">
+          <TableName>calendar</TableName>
+          <ColumnName>calendarEventID</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>calendar</TableName>
+          <ColumnName>eventTS</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>calendar</TableName>
+          <ColumnName>eventDesc</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="lcha">
+          <TableName>calendar</TableName>
+          <ColumnName>eventText</ColumnName>
+        </Column>
+      </DataDictionary>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>calendar</TableName>
+          <ColumnName>calendarEventID</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[<@POSTARG eventID>]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <ValueList>
+        <ValueItem>
+          <Name>eventTS</Name>
+          <Value><![CDATA[<@ARG eventDate> @@request$hour:<@ARG minute>:00]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>eventDesc</Name>
+          <Value><![CDATA[<@ARG eventName>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+        <ValueItem>
+          <Name>eventText</Name>
+          <Value><![CDATA[<@ARG eventDesc>]]></Value>
+          <QuoteValue>true</QuoteValue>
+          <IncludeIfEmpty>true</IncludeIfEmpty>
+          <NullValue>false</NullValue>
+        </ValueItem>
+      </ValueList>
+    </UpdateAction>
+    <SearchAction DSID="loremipsum" DeploymentDSID="" ID="event3" Sig="srch" UseDevelopmentDataSource="TRUE">
+      <Tables>
+        <TableName>dbo.calendar</TableName>
+      </Tables>
+      <DataDictionary>
+        <Column ColumnType="0" DataType="tims">
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventTS</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="vcha">
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventDesc</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="lcha">
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventText</ColumnName>
+        </Column>
+        <Column ColumnType="0" DataType="long">
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>calendarEventID</ColumnName>
+        </Column>
+      </DataDictionary>
+      <SearchColumns>
+        <ColumnReference>
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventTS</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventDesc</ColumnName>
+        </ColumnReference>
+        <ColumnReference>
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>eventText</ColumnName>
+        </ColumnReference>
+      </SearchColumns>
+      <OrderColumns/>
+      <GroupColumns/>
+      <Criteria>
+        <CriteriaItem>
+          <TableName>dbo.calendar</TableName>
+          <ColumnName>calendarEventID</ColumnName>
+          <Operator>iseq</Operator>
+          <Value><![CDATA[<@ARG eventID>]]></Value>
+          <QuoteValue>false</QuoteValue>
+          <IncludeIfEmpty>false</IncludeIfEmpty>
+        </CriteriaItem>
+      </Criteria>
+      <StartRow>1</StartRow>
+      <MaxRows>1</MaxRows>
+      <ResultSet Name="event" Type="Array"/>
+    </SearchAction>
+    <ResultAction ID="Results3" Sig="null">
+      <ResultsOutput Ref="Results3.Results"/>
+    </ResultAction>
+  </Actions>
+  <DataSources>
+    <DataSource ID="loremipsum">
+      <DSType>ODBC</DSType>
+      <DSN>lorem ipsum</DSN>
+      <DBMS/>
+      <Host>lorem ipsum</Host>
+      <Database/>
+      <UserInfo Encrypted="True" Encryption="50">
+        <UserName>lorem</UserName>
+        <Password>ipsum</Password>
+      </UserInfo>
+    </DataSource>
+  </DataSources>
+  <Outputs>
+    <Output ID="debug.Results" Type="HTML"><![CDATA[<@ifequal '1' '12'>
+<@ifequal "<@CGIPARAM CLIENT_IP>" "000.000.000.000">
+	<@assign name="request$debugMode" value="forceOn">
+</@if>
+</@if>]]></Output>
+    <Output ID="new.Results" Type="HTML"><![CDATA[<@assign name="request$row" value="@@request$ending[@@request$i,1]<@char 28>@@request$ending[@@request$i,2]<@char 28>@@request$new[1,1]<@char 28><@ifequal '@@request$new[1,1]' '0'>0<@else><@calc expr='(@@request$new[1,1]/@@request$ending[@@request$i,2])*100' precision='1'></@if><@char 30>">
+<@addrows array="request$honorroll" value="<@array value='@@request$row' cdelim='<@char 28>' rdelim='<@char 30>'>">]]></Output>
+    <Output ID="Results1.Results" Type="HTML"><![CDATA[<@sort array="request$honorroll" cols="4 desc">]]></Output>
+    <Output ID="addrows2.Results" Type="HTML"><![CDATA[<@assign name="request$thisrow" value="@@request$girl[1,3]<@char 28>@@request$girl[1,2]<@char 28>@@request$girl[1,4]<@char 28>@@request$girl[1,1]<@char 28>@@request$code[1,1]<@char 30>">
+
+<@addrows array="request$members" value="<@array value='@@request$thisrow' cdelim='<@char 28>' rdelim='<@char 30>'>">]]></Output>
+    <Output ID="sort2.Results" Type="HTML"><![CDATA[<@sort array='request$members' cols='1,2'>
+<@debug>@@request$members</@debug>]]></Output>
+    <Output ID="addrows.Results" Type="HTML"><![CDATA[<@assign name="request$thisrow" value="@@request$girl[1,3]<@char 28>@@request$girl[1,2]<@char 28>@@request$girl[1,4]<@char 28>@@request$girl[1,1]<@char 28>@@request$code[1,1]<@char 30>">
+
+<@addrows array="request$members" value="<@array value='@@request$thisrow' cdelim='<@char 28>' rdelim='<@char 30>'>">]]></Output>
+    <Output ID="sort.Results" Type="HTML"><![CDATA[<@sort array='request$members' cols='1,2'>]]></Output>
+    <Output ID="add_12_to_pm_events.Results" Type="HTML"><![CDATA[<@if expr="(<@ARG hour> = 12) and (<@ARG ampm> = 12)"> <@! if noon>
+<@assign name="hour" scope="local" value="12">
+<@elseif expr="(<@ARG hour> = 12) and (<@ARG ampm> = 0)"> <@! if midnight>
+<@assign name="hour" scope="local" value="0">
+<@else> <@! if anything else>
+<@assign name="hour" scope="local" value="<@calc expr='<@ARG hour> + <@ARG ampm>'>">
+</@if>]]></Output>
+    <Output ID="Results.Results" Type="HTML"><![CDATA[<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+<title>Lorem Ipsum</title>
+<style type="text/css" media="all">
+<!--
+@import url("../css/style.css");
+-->
+</style>
+</head>
+
+<body style="background:white; text-align:left; padding:20px">
+<span class="subheadBlue"><@var name="request$event[1,2]"></span>
+<p>Date and Time: <@var name="request$event[1,1]" format="datetime:%m/%d/%Y at %I:%M %p"></p>
+<p><@var name="request$event[1,3]"></p>
+<p><a href="<@cgi><@appfile>?do=editevent&eventID=<@ARG eventID>">Edit This Event</a></p>
+<p align="right"><a href="#" onclick="window.close()">Close Window</a></p>
+</body>
+</html>]]></Output>
+    <Output ID="Results2.Results" Type="HTML"><![CDATA[<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+<title>Lorem Ipsum</title>
+<style type="text/css" media="all">
+<!--
+@import url("../css/style.css");
+-->
+</style>
+<script type="text/javascript" src="../css/CalendarPopup.js" language="JavaScript"></script>
+<SCRIPT type="text/javascript" LANGUAGE="JavaScript">document.write(getCalendarStyles());</SCRIPT>
+<SCRIPT type="text/javascript" LANGUAGE="JavaScript" ID="todaycal">
+	var todaycal = new CalendarPopup();
+	todaycal.showYearNavigation();
+</SCRIPT>
+</head>
+
+<body style="background:white; text-align:left; padding:20px">
+<form action="<@cgi><@appfile>?do=updateevent" method="post" name="addevent" id="addevent">
+		<table width="100%" border="0" cellspacing="0" cellpadding="2">
+                <tr>
+                  <td width="17%" align="right">Name:</td>
+                  <td width="83%"><input name="eventName" type="text" id="eventName" size="40" value="@@request$event[1,2]" /></td>
+                </tr>
+                <tr>
+                  <td align="right" valign="top">Description:</td>
+                  <td><textarea name="eventDesc" id="eventDesc" cols="38" rows="5">@@request$event[1,3]</textarea></td>
+                </tr>
+                <tr>
+                  <td align="right">Date:</td>
+                  <td><input name="eventDate" type="text" id="eventDate" size="15" value="<@var name='request$event[1,1]' format='datetime:%m/%d/%Y'>">
+                    <A HREF="#" onClick="todaycal.select(document.forms['addevent'].eventDate,'anchor1xx','MM/dd/yyyy'); return false;" NAME="anchor1xx" ID="anchor1xx"><img src="../images/show-calendar.gif" alt="Pop Calendar" align="absmiddle" border="0"></a></td>
+                </tr>
+                <tr>
+                  <td align="right">Time:</td>
+                  <td><select name="hour" size="1">
+                      <option value="12" <@ifequal '<@var name="request$event[1,1]" format="datetime:%I">' '12'>selected</@if>>12</option>
+                      <option value="01" <@ifequal '<@var name="request$event[1,1]" format="datetime:%I">' '1'>selected</@if>>1</option>
+                      <option value="02" <@ifequal '<@var name="request$event[1,1]" format="datetime:%I">' '2'>selected</@if>>2</option>
+                      <option value="03" <@ifequal '<@var name="request$event[1,1]" format="datetime:%I">' '3'>selected</@if>>3</option>
+                      <option value="04" <@ifequal '<@var name="request$event[1,1]" format="datetime:%I">' '4'>selected</@if>>4</option>
+                      <option value="05" <@ifequal '<@var name="request$event[1,1]" format="datetime:%I">' '5'>selected</@if>>5</option>
+                      <option value="06" <@ifequal '<@var name="request$event[1,1]" format="datetime:%I">' '6'>selected</@if>>6</option>
+                      <option value="07" <@ifequal '<@var name="request$event[1,1]" format="datetime:%I">' '7'>selected</@if>>7</option>
+                      <option value="08" <@ifequal '<@var name="request$event[1,1]" format="datetime:%I">' '8'>selected</@if>>8</option>
+                      <option value="09" <@ifequal '<@var name="request$event[1,1]" format="datetime:%I">' '9'>selected</@if>>9</option>
+                      <option value="10" <@ifequal '<@var name="request$event[1,1]" format="datetime:%I">' '10'>selected</@if>>10</option>
+                      <option value="11" <@ifequal '<@var name="request$event[1,1]" format="datetime:%I">' '11'>selected</@if>>11</option>
+                    </select>
+                    :
+                    <select name="minute" size="1">
+                      <option value="00" <@ifequal '<@var name="request$event[1,1]" format="datetime:%M">' '00'>selected</@if>>00</option>
+                      <option value="15" <@ifequal '<@var name="request$event[1,1]" format="datetime:%M">' '15'>selected</@if>>15</option>
+                      <option value="30" <@ifequal '<@var name="request$event[1,1]" format="datetime:%M">' '30'>selected</@if>>30</option>
+                      <option value="45" <@ifequal '<@var name="request$event[1,1]" format="datetime:%M">' '45'>selected</@if>>45</option>
+                    </select>
+                    <select name="ampm" size="1">
+                      <option value="0" <@ifequal '<@var name="request$event[1,1]" format="datetime:%p">' 'AM'>selected</@if>>a.m.</option>
+                      <option value="12" <@ifequal '<@var name="request$event[1,1]" format="datetime:%p">' 'PM'>selected</@if>>p.m.</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="right">&nbsp;</td>
+                  <td><input type="hidden" name="eventID" value="@@request$event[1,4]"><input type="submit" name="button" id="button" value="Update Event" /></td>
+                </tr>
+           </table>
+<p align="right"><a href="#" onclick="window.close()">Close Window</a></p>
+</form>
+</body>
+</html>]]></Output>
+    <Output ID="add_12_to_pm_events2.Results" Type="HTML"><![CDATA[<@if expr="(<@ARG hour> = 12) and (<@ARG ampm> = 12)"> <@! if noon>
+<@assign name="hour" scope="local" value="12">
+<@elseif expr="(<@ARG hour> = 12) and (<@ARG ampm> = 0)"> <@! if midnight>
+<@assign name="hour" scope="local" value="0">
+<@else> <@! if anything else>
+<@assign name="hour" scope="local" value="<@calc expr='<@ARG hour> + <@ARG ampm>'>">
+</@if>]]></Output>
+    <Output ID="Results3.Results" Type="HTML"><![CDATA[<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+<title>Lorem Ipsum</title>
+<style type="text/css" media="all">
+<!--
+@import url("../css/style.css");
+-->
+</style>
+</head>
+
+<body style="background:white; text-align:left; padding:20px">
+<span class="subheadBlue"><@var name="request$event[1,2]"></span>
+<p>Date and Time: <@var name="request$event[1,1]" format="datetime:%m/%d/%Y at %I:%M %p"></p>
+<p><@var name="request$event[1,3]"></p>
+<p><a href="<@cgi><@appfile>?do=editevent&eventID=<@ARG eventID>">Edit This Event</a></p>
+<p align="right"><a href="#" onclick="window.close()">Close Window</a></p>
+</body>
+</html>]]></Output>
+  </Outputs>
+</TAF>
