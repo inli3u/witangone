@@ -3,7 +3,7 @@
 /*
 
 Go back to string-based parsing
-need to be able to peek('and') for boolean compares
+need to be able to peek('and') for boolean operators
 
 add boolean operators:
 
@@ -11,9 +11,6 @@ term = boolean {('*' | '/') boolean}
 boolean = factor {('and' | 'or')} factor}
 
 add string handling:
-
-factor = "'" expression "''
-factor = '"' expression '"'
 
 translate MetaTag into CallFunction
 - substring == substr, etc.
@@ -24,79 +21,57 @@ translate MetaTag into CallFunction
 
 class Node
 {
+	public $value;
 	public $line = 0;
 	public function __construct() {}
 	public function text($level = 0)
 	{
-		echo str_repeat("\t", $level) . get_class($this) . "\n";
+		return str_repeat("\t", $level) . get_class($this) . "\n";
 	}
 }
 
-class ExpressionNode extends Node
+class UnaryNode extends Node
 {
-	public $left;
-	public $right;
-	public function text($level = 0)
-	{
-		return str_repeat("\t", $level) . get_class($this) . "\n" .
-			$this->left->text($level + 1) .
-			$this->right->text($level + 1);
-		
-	}
+	public $child;
 }
 
-class QuotedExpressionNode extends Node
+class BinaryNode extends Node
 {
-	public $list = array();
-}
-
-class NumberNode extends Node
-{
-	public $value;
-	public function text($level = 0)
-	{
-		return str_repeat("\t", $level) . get_class($this) . ' ' . $this->value . "\n";
-	}
-}
-
-class OpNode extends Node
-{
-	public $value;
 	public $left;
 	public $right;
 	public function text($level = 0)
 	{
 		return str_repeat("\t", $level) . get_class($this) . ' ' . $this->value . "\n" .
+			str_repeat("\t", $level) . "- Left:\n" .
 			$this->left->text($level + 1) .
+			str_repeat("\t", $level) . "- Right:\n";
 			$this->right->text($level + 1);
-		
 	}
 }
 
-class ConditionNode extends Node
-{
-	public $value;
-	public $left;
-	public $right;
-	public function text($level = 0)
-	{
-		return str_repeat("\t", $level) . get_class($this) . ' ' . $this->value . "\n" .
-			$this->left->text($level + 1) .
-			$this->right->text($level + 1);
-		
-	}
-
-}
-
-class BlockNode extends Node
+class ListNode extends Node
 {
 	public $list = array();
+	public function text($level = 0)
+	{
+		$str = str_repeat("\t", $level) . get_class($this) . ' ' . $this->value . "\n";
+		foreach ($this->list as $node) {
+			$str .= $node->text($level + 1);
+		}
+		return $str;
+	}
 }
 
-class VariableNode extends Node
+class QuotedExpressionNode extends ListNode
 {
-	public $name;
-	public $scope;
+}
+
+class ConditionNode extends BinaryNode
+{
+}
+
+class OpNode extends BinaryNode
+{
 }
 
 class MetaTagNode extends Node
@@ -105,12 +80,28 @@ class MetaTagNode extends Node
 	public $attr_list = array();
 }
 
+class VariableNode extends Node
+{
+	public $name;
+	public $scope;
+}
+
+class NumberNode extends Node
+{
+}
+
+class ParenNode extends UnaryNode
+{
+}
+
+
+
 class WitangoParser extends GenericParser
 {
 	public $tokens = array();
 	private $quote_stack = array();
 	
-	// condition = expression ('<' '<=' '=' '>=' >') expression
+	// condition = expression ('=' '!=' '<' '<=' '>' >=') expression
 	function condition(&$tree)
 	{
 		$left = null;
@@ -124,87 +115,19 @@ class WitangoParser extends GenericParser
 		}
 		return false;
 	}
-
-	// expression = term {(+ | -) term}
-	function expression(&$tree)
-	{
-		if ($this->term($tree)) {
-			while ($this->char === '+' || $this->char === '-') {
-				$node = new OpNode();
-				$node->value = $this->char;
-				$node->left = $tree;
-				$this->next();
-				if (!$this->term($node->right)) {
-					$this->error('Expected term on right');
-				}
-				$tree = $node;
-			}
-			return true;
-		}
-		return false;
-	}
-
-	// term = factor {(* | /) factor}
-	function term(&$tree)
-	{
-		if ($this->factor($tree)) {
-			while ($this->char === '*' || $this->char === '/') {
-				$node = new OpNode();
-				$node->value = $this->char;
-				$node->left = $tree;
-				$this->next();
-				if (!$this->term($node->right)) {
-					$this->error('Expected term on right');
-				}
-				$tree = $node;
-			}
-			return true;
-		}
-		return false;
-	}
-
-	// factor = number | '(' expression ')'
-	function factor(&$tree)
-	{
-		if ($this->meta_tag($tree)) {
-			return true;
-		} elseif ($this->variable($tree)) {
-			return true;
-		} elseif ($this->number($tree)) {
-			return true;
-		} elseif ($this->quoted_expression($tree)) {
-			return true;
-		} elseif ($this->peek('(')) {
-			$this->expression($tree);
-			$this->expect(')');
-			return true;
-		}
-		return false;
-	}
-
-	function number(&$tree)
-	{
-		if ($this->is_digit($this->char)) {
-			$value = $this->char;
-			while ($this->is_digit($this->next())) {
-				$value .= $this->char;
-			}
-			$tree = new NumberNode();
-			$tree->value = (int)$value;
-			return true;
-		}
-		return false;
-	}
-
+	
+	// quoted_expression = ('"' | "'") expression ('"' | "'")
 	public function quoted_expression(&$tree)
 	{
-		echo "EXPRESSION ->\n";
+		//echo "EXPRESSION ->\n";
 		$tree = new QuotedExpressionNode();
 		
 		if (count($this->quote_stack)) {
 			$last_quote = $this->quote_stack[count($this->quote_stack) - 1];
 			$quote = ($last_quote == '"') ? "'" : '"';
-			$this->expect($quote);
+			if (!$this->peek($quote)) {
+				return false;
+			}
 		} else {
 			if ($this->peek('"')) {
 				$quote = '"';
@@ -224,8 +147,56 @@ class WitangoParser extends GenericParser
 		}
 		
 		array_pop($this->quote_stack);
-		echo "<- EXPRESSION\n";
+		//echo "<- EXPRESSION\n";
 		return true;
+	}
+
+	// expression = term {('+' | '-') term}
+	function expression(&$tree)
+	{
+		if ($this->term($tree)) {
+			$this->whitespace();
+			while ($this->char === '+' || $this->char === '-') {
+				$node = new OpNode();
+				$node->value = $this->char;
+				$node->left = $tree;
+				$this->next();
+				if (!$this->term($node->right)) {
+					$this->error('Expected term on right');
+				}
+				$this->whitespace();
+				$tree = $node;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	// term = factor {('*' | '/') factor}
+	function term(&$tree)
+	{
+		if ($this->factor($tree)) {
+			$this->whitespace();
+			while ($this->char === '*' || $this->char === '/') {
+				$node = new OpNode();
+				$node->value = $this->char;
+				$node->left = $tree;
+				$this->next();
+				if (!$this->term($node->right)) {
+					$this->error('Expected term on right');
+				}
+				$this->whitespace();
+				$tree = $node;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	// factor = meta_tag | variable | number | quoted_expression | parens
+	function factor(&$tree)
+	{
+		return $this->meta_tag($tree) || $this->variable($tree) || $this->number($tree) || $this->quoted_expression($tree) || $this->parens($tree);
 	}
 
 	function meta_tag(&$tree)
@@ -241,7 +212,7 @@ class WitangoParser extends GenericParser
 			$this->whitespace();
 
 			while (false !== $attr = $this->read_ident()) {
-				echo 'ATTR: ' . $attr . "\n";
+				//echo 'ATTR: ' . $attr . "\n";
 				$this->expect('=');
 				$this->quoted_expression($tree->attr_list[$attr]);
 			}
@@ -251,7 +222,7 @@ class WitangoParser extends GenericParser
 		}
 		return false;
 	}
-
+	
 	function variable(&$tree)
 	{
 		if ($this->peek('@@')) {
@@ -267,6 +238,31 @@ class WitangoParser extends GenericParser
 			if (!strlen($tree->name)) {
 				$this->error('Expected variable name');
 			}
+			return true;
+		}
+		return false;
+	}
+	
+	function number(&$tree)
+	{
+		if ($this->is_digit($this->char)) {
+			$value = $this->char;
+			while ($this->is_digit($this->next())) {
+				$value .= $this->char;
+			}
+			$tree = new NumberNode();
+			$tree->value = (int)$value;
+			return true;
+		}
+		return false;
+	}
+	
+	function parens(&$tree)
+	{
+		if ($this->peek('(')) {
+			$tree = new ParenNode();
+			$this->expression($tree->child);
+			$this->expect(')');
 			return true;
 		}
 		return false;
@@ -378,6 +374,7 @@ class ParseError extends Exception
 }
 
 
+/*
 $expr = <<<EOL
 ('<@datediff date1="<@ARG initiation>" date2="1/1/<@currentdate format='datetime:%Y'>">'<'0') and ('@@user\$adminlevel'>'-2')
 EOL;
@@ -388,13 +385,15 @@ $expr = <<<EOL
 <@calc expr='<@datediff date1="<@var name='<@currow>'>" format="<@getFormat>">'>
 EOL;
 
-$expr = '(2 + @@request$test) * <@calc expr="9 + 9"> != 5 - 2';
+$expr = '"(2 + @@request$test) * <@calc expr=\'9 + 9\'>" != 5 - 2';
 
 $src = new WitangoParser($expr);
 
 $tree = null;
 //$src->try_expr($tree);
 $src->condition($tree);
-print_r($tree);
+echo $tree->text();
+//print_r($tree);
+*/
 
 
