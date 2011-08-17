@@ -5,19 +5,19 @@
 \deftab480
 \pard\tx480\pardeftab480\ql\qnatural\pardirnatural
 
-\f0\fs20 \cf2 \CocoaLigature0 fragment =			\{(alpha_numeric | meta_tag | variable)\}\
+\f0\fs20 \cf2 \CocoaLigature0 fragment =			\{(alpha_numeric | meta_tag | meta_ending_tag[return] | variable)\}\
 \
-condition =			expression ('=' '!=' '<' '<=' '>' >=') expression\
+comparison =		expression [('=' '!=' '<' '<=' '>' >=') expression]\
 \
-quoted_expression =	('"' | "'") expression ('"' | "'")\
+expression =		operand \{('and' | 'or') operand\}\
 \
-expression =		term \{('+' | '-') term\}\
+operand =			term \{('+' | '-') term\}\
 \
 term =				factor \{('*' | '/') factor\}\
 \
-factor =			meta_tag | variable | number | quoted_expression | parens\
+factor =			meta_tag | variable | number | parens\
 \
-meta_tag =			'<@' ident ws \{('expr' '=' quoted_expression | ident '=' fragment)\} '>'\
+meta_tag =			('<@' | '</@') ident ws \{('expr' '=' operation | ident '=' fragment)\} '>'\
 \
 variable =			'@@' ('request' | 'user') '$' ident\
 \
@@ -25,4 +25,49 @@ number =			digit \{digit\}\
 \
 parens =			'(' expression ')'\
 \
+---------------------------------------------------------------\
+\
+check for use in expression:\
+- if, elseif, else, for, rows\
+\
+inside of:\
+- assign\
+	$var = 'tree fingers';\
+	if (1 = 2) \{\
+		$var = $var . ' bow ties';\
+	\} else \{\
+		$var = $var . ' flipper';\
+	\}\
+- argument\
+	if (5 = 'ice cream') \{\
+		$temp1 = 'blam';\
+	\} else \{\
+		$temp1 = 'clam';\
+	\}\
+	echo substr('its a ' . $temp1, 0);\
+- concatenation (fragment)\
+	// works. dont' concat, just use separate echos.\
+\
+if (contains statement)\
+	target.push('var', var_name)\
+$expr = visit(node->expr)\
+target.pop()\
+-----------------------\
+if (target == 'echo')\
+\
+Assignment\
+	Fragment\
+		Text 'Name is '\
+		Conditional\
+		- Left\
+			Text 'John'\
+		- Right\
+			Text 'Bob'\
+\
+\
+<@if expr="5 > 0">\
+	true text\
+<@else>\
+	false text\
+</@if>\
 }

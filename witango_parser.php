@@ -85,20 +85,30 @@ boolean = factor {('and' | 'or')} factor}
 
 class Node
 {
+	public $parent;
 	public $name;
 	public $value;
+	public $body = false;
 	public $line = 0;
 	public function __construct() {}
 	public function text($level = 0)
 	{
 		return str_repeat("\t", $level) . get_class($this) . ' [' . $this->name . '] ' . $this->value . "\n";
 	}
+	
+	
 }
 
 class UnaryNode extends Node
 {
 	public $child;
 	
+	public function text($level = 0)
+	{
+		return str_repeat("\t", $level) . get_class($this) . ' [' . $this->name . '] ' . $this->value . "\n" .
+			str_repeat("\t", $level) . "- Child:\n" .
+			$this->child->text($level + 1);
+	}
 }
 
 class BinaryNode extends Node
@@ -110,14 +120,26 @@ class BinaryNode extends Node
 		return str_repeat("\t", $level) . get_class($this) . ' [' . $this->name . '] ' . $this->value . "\n" .
 			str_repeat("\t", $level) . "- Left:\n" .
 			$this->left->text($level + 1) .
-			str_repeat("\t", $level) . "- Right:\n";
-			$this->right->text($level + 1);
+			(($this->right instanceof Node) ?
+				str_repeat("\t", $level) . "- Right:\n" .
+				$this->right->text($level + 1)
+			: '');
 	}
 }
 
 class ListNode extends Node
 {
 	public $list = array();
+	
+	public function insert_before($node)
+	{
+		if ($this->parent instanceof ListNode) {
+			//$this->parent->list[$this->index]
+		} else {
+			throw new Exception('Not in a node list');
+		}
+	}
+	
 	public function text($level = 0)
 	{
 		$str = str_repeat("\t", $level) . get_class($this) . ' [' . $this->name . '] ' . $this->value . "\n";
@@ -128,13 +150,23 @@ class ListNode extends Node
 	}
 }
 
+class NoopNode extends Node
+{
+}
+
 class FragmentNode extends ListNode
 {
+	public $statement = false;
 }
     
     
 class QuotedExpressionNode extends ListNode
 {
+}
+
+class ConditionalNode extends BinaryNode
+{
+	public $expr;
 }
 
 class ConditionNode extends BinaryNode
@@ -156,6 +188,12 @@ class VariableNode extends Node
 	public $scope;
 }
 
+class AssignmentNode extends UnaryNode
+{
+	public $name;
+	public $scope;
+}
+
 class NumberNode extends Node
 {
 }
@@ -168,88 +206,11 @@ class TextNode extends Node
 {
 }
 
-
-class WitangoParser extends GenericParser
+class CommentNode extends Node
 {
-	public $tokens = array();
-	private $quote_stack = array();
-	
-	public function get_current_quote()
-	{
-		return @$this->quote_stack[count($this->quote_stack) - 1];
-	}
-	
-	public function get_inversed_quote()
-	{
-		if ($this->get_current_quote() === ' ') {
-			return ' ';
-		} else {
-			return ($this->get_current_quote() == '"') ? "'" : '"';
-		}
-	}
-	
-	public function fragment(&$tree)
-	{
-		$tree = new FragmentNode();
-		$text_node = new TextNode();
-		$meta_node = null;
-		$more = true;
-		do {
-			if ($this->meta_tag($meta_node) || $this->variable($meta_node)) {
-			} elseif ($this->char === $this->get_current_quote()) {
-				// Break if we are in quotes and found matching quote.
-				// Do not advance input.
-				$more = false;
-			} elseif ($this->get_current_quote() === ' ' && $this->is_whitespace()) {
-				// Break if we are in a quotable section that isn't quoted, and we hit whitespace.
-				// Do not advance input.
-				$more = false;
-			} elseif ($this->is_eof()) {
-				$more = false;
-			} else {
-				$text_node->value .= $this->char;
-				$this->next_raw();
-			}
-			
-			if ($meta_node !== null || !$more) {
-				if (strlen($text_node->value)) {
-					$tree->list[] = $text_node;
-					$text_node = new TextNode();
-				}
-			}
-			
-			if ($meta_node !== null) {
-				$tree->list[] = $meta_node;
-				$meta_node = null;
-			}
-		} while ($more);
-		
-		if (count($tree->list) === 1) {
-			// If there's only one node in the list, replace the whole fragment node list with that node.
-			// Just to save on space.
-			$tree = $tree->list[0];
-		} elseif (count($tree->list) === 0) {
-			return false;
-		}
-		
-		return true;
-	}
-	
-	// condition = expression ('=' '!=' '<' '<=' '>' >=') expression
-	function condition(&$tree)
-	{
-		$left = null;
-		if ($this->expression($left) && in_array($this->char, array('=', '!=', '<', '<=', '>', '>='))) {
-			$tree = new ConditionNode();
-			$tree->value = $this->char;
-			$tree->left = $left;
-			$this->next();
-			$this->expression($tree->right);
-			return true;
-		}
-		return false;
-	}
-	
+}
+
+	/*
 	// quoted_expression = ('"' | "'") expression ('"' | "'")
 	public function quoted_expression(&$tree)
 	{
@@ -284,9 +245,140 @@ class WitangoParser extends GenericParser
 		//echo "<- EXPRESSION\n";
 		return true;
 	}
+	*/
 
-	// expression = term {('+' | '-') term}
+class WitangoParser extends GenericParser
+{
+	private static $block_start_tags = array('if', 'elseif', 'else', 'for', 'rows');
+	private static $block_end_tags = array('elseif', 'else', '/if', '/for', '/rows');
+	private $quote_stack = array();
+	public $tokens = array();
+	
+	public function get_current_quote()
+	{
+		return @$this->quote_stack[count($this->quote_stack) - 1];
+	}
+	
+	public function get_inversed_quote()
+	{
+		if ($this->get_current_quote() === ' ') {
+			return ' ';
+		} else {
+			return ($this->get_current_quote() == '"') ? "'" : '"';
+		}
+	}
+	
+	public function fragment(&$tree)
+	{
+		$tree = new FragmentNode();
+		$text_node = new TextNode();
+		$meta_node = null;
+		$more = true;
+		do {
+			if ($this->meta_comment($meta_node) || $this->meta_tag($meta_node) || $this->variable($meta_node)) {
+			} elseif ($this->char === $this->get_current_quote()) {
+				// Break if we are in quotes and found matching quote.
+				// Do not advance input.
+				$more = false;
+			} elseif ($this->get_current_quote() === ' ' && ($this->is_whitespace() || $this->char === '>')) {
+				// Break if we are in a quotable section that isn't quoted, and
+				// we hit whitespace or end of tag.
+				// Do not advance input.
+				$more = false;
+			} elseif ($this->is_eof()) {
+				$more = false;
+			} else {
+				$text_node->value .= $this->char;
+				$this->next_raw();
+			}
+			
+			if ($meta_node !== null || !$more) {
+				if (strlen($text_node->value)) {
+					$tree->list[] = $text_node;
+					$text_node = new TextNode();
+				}
+			}
+			
+			if ($meta_node !== null) {
+				$tree->list[] = $meta_node;
+				if (in_array($meta_node->name, self::$block_end_tags)) {
+					echo "found END TAG\n";
+					$more = false;
+				}
+				$meta_node = null;
+			}
+		} while ($more);
+		
+		if (count($tree->list) === 1) {
+			// If there's only one node in the list, replace the whole fragment node list with that node.
+			// Just to save on space.
+			
+			// Disabled -- translator has fragment handling var assignment and output, can't bypass it.
+			//$tree = $tree->list[0];
+			return true;
+		} elseif (count($tree->list) === 0) {
+			return false;
+		}
+		
+		return true;
+	}
+	
+	// expression = operand {('and' | 'or') operand}
 	function expression(&$tree)
+	{
+		if ($this->operand($tree)) {
+			$this->whitespace();
+			
+			while (true) {
+				if ($this->peek('and')) {
+					$op = '&&';
+				} elseif ($this->peek('or')) {
+					$op = '||';
+				} else {
+					break;
+				}
+				
+				$node = new OpNode();
+				$node->value = $op;
+				$node->left = $tree;
+				if (!$this->operand($node->right)) {
+					$this->error('Expected operand on right');
+				}
+				$this->whitespace();
+				$tree = $node;
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	// operand = math_expression [('=' '!=' '<' '<=' '>' >=') math_expression]
+	function operand(&$tree)
+	{
+		$left = null;
+		if ($this->math_expression($left)) {
+			$found = false;
+			foreach (array('=', '!=', '<', '<=', '>', '>=') as $symbol) {
+				if ($this->peek($symbol))
+				$found = true;
+				break;
+			}
+			if ($found) {
+				$tree = new OpNode();
+				$tree->value = ($symbol === '=') ? '==' : $symbol;
+				$tree->left = $left;
+				$this->next();
+				$this->math_expression($tree->right);
+			} else {
+				$tree = $left;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	// math_expression = term {('+' | '-') term}
+	function math_expression(&$tree)
 	{
 		if ($this->term($tree)) {
 			$this->whitespace();
@@ -316,8 +408,8 @@ class WitangoParser extends GenericParser
 				$node->value = $this->char;
 				$node->left = $tree;
 				$this->next();
-				if (!$this->term($node->right)) {
-					$this->error('Expected term on right');
+				if (!$this->factor($node->right)) {
+					$this->error('Expected factor on right');
 				}
 				$this->whitespace();
 				$tree = $node;
@@ -326,57 +418,221 @@ class WitangoParser extends GenericParser
 		}
 		return false;
 	}
-
-	// factor = meta_tag | variable | number | quoted_expression | parens
+	
+	/*
+	// factor = operand {('*' | '/') operand}
 	function factor(&$tree)
 	{
-		return $this->meta_tag($tree) || $this->variable($tree) || $this->number($tree) || $this->quoted_expression($tree) || $this->parens($tree);
+		if ($this->operand($tree)) {
+			$this->whitespace();
+			while ($this->char === '*' || $this->char === '/') {
+				$node = new OpNode();
+				$node->value = $this->char;
+				$node->left = $tree;
+				$this->next();
+				if (!$this->operand($node->right)) {
+					$this->error('Expected factor on right');
+				}
+				$this->whitespace();
+				$tree = $node;
+			}
+			return true;
+		}
+		return false;
+	}
+	*/
+
+	// operand = meta_tag | variable | number | parens
+	function factor(&$tree)
+	{
+		return $this->meta_tag($tree) || $this->variable($tree) || $this->number($tree) || $this->parens($tree);
 	}
 
 	function meta_tag(&$tree)
 	{
-		if ($this->peek('<@')) {
+		$closing = false;
+		if ($this->peek('<@') || ($closing = $this->peek('</@'))) {
 			$tree = new MetaTagNode();
 			$tree->name = $this->read_ident();
+			
 			if (!strlen($tree->name)) {
 				$this->error('Expected meta tag name');
 			}
+			if ($closing) {
+				$tree->name = '/' . $tree->name;
+			}
+			echo "Tag: " . $tree->name . "\n";
 
 			// Consume any whitespace.
 			$this->whitespace();
 
 			while (false !== $attr = $this->read_ident()) {
-				//echo 'ATTR: ' . $attr . "\n";
-				$this->expect('=');
+				// Attributes don't require a value.
+				if ($this->peek('=')) {
 				
-				if (count($this->quote_stack)) {
-					$quote = $this->get_inversed_quote();
-					if ($quote !== ' ' && !$this->peek($quote)) {
-						$quote = ' ';
-					}
-				} else {
-					if ($this->peek('"')) {
-						$quote = '"';
-					} elseif ($this->peek("'")) {
-						$quote = "'";
+					// Expecting an optional begining quote.
+					if (count($this->quote_stack)) {
+						$quote = $this->get_inversed_quote();
+						if ($quote !== ' ' && !$this->peek($quote)) {
+							$quote = ' ';
+						}
 					} else {
-						$quote = ' ';
+						if ($this->peek('"')) {
+							$quote = '"';
+						} elseif ($this->peek("'")) {
+							$quote = "'";
+						} else {
+							$quote = ' ';
+						}
 					}
-				}
-				
-				array_push($this->quote_stack, $quote);
-				if (strtolower($attr) === 'expr') {
-					// Note: this is not good enough detection, since the tag could be written:
-					// <@calc "1 + 2"> instead. In reality witango eval()s the contents of expr at
-					// runtime, so maybe this should be processed as a fragment also.
-					$this->expression($tree->list[$attr]);
+
+					array_push($this->quote_stack, $quote);
+					if (strtolower($attr) === 'expr') {
+						// Note: this is not good enough detection, since the tag could be written:
+						// <@calc "1 + 2"> instead. In reality witango eval()s the contents of expr at
+						// runtime, so maybe this should be processed as a fragment also.
+						$this->expression($tree->list[$attr]);
+					} else {
+						$this->fragment($tree->list[$attr]);
+					}
+					
+					if ($quote !== ' ') {
+						var_dump($this->char);
+						$this->expect(array_pop($this->quote_stack));
+					}
 				} else {
-					$this->fragment($tree->list[$attr]);
+					// No value.
+					$tree->list[$attr] = new NoopNode();
 				}
-				$this->expect(array_pop($this->quote_stack));
 			}
 			
 			$this->expect('>');
+			
+			// Rewrite the node as a more specific type of tag if needed.
+			$this->meta_assign($tree) || $this->meta_if($tree) || $this->meta_for($tree) || $this->meta_rows($tree);
+			return true;
+		}
+		return false;
+	}
+
+	function meta_assign(&$tree)
+	{
+		if ($tree->name === 'assign') {
+			echo "found ASSIGN\n";
+			$node = new AssignmentNode();
+			if (!isset($tree->list['name'])) {
+				$this->error('Expecting name attribute for <@assign>');
+			} elseif (!isset($tree->list['value'])) {
+				$tree->error('Expecting value attribute for <@assign>');
+			}
+			
+			$name_node = @$tree->list['name']->list[0];
+			if ($name_node instanceof TextNode) {
+				// Handle the case of name being a simple TextNode.
+				// Extract name and scope from meta tag.
+				$parts = explode('$', $name_node->value);
+				if (count($parts) === 2) {
+					// "name" contains scope and name.
+					$node->scope = $parts[0];
+					$node->name = $parts[1];
+				} elseif (count($parts) === 1) {
+					// "name" only contains name. Check "scope" for scope.
+					if (!isset($tree->list['scope'])) {
+						$this->error('Expecting scope attribute');
+					}
+					$node->name = $parts[0];
+					$node->scope = $tree->list['scope']->list[0]->value;
+				} else {
+					$this->error('Invalid format for name attribute');
+				}
+			} else {
+				// Handle the case of name being a FragmentNode (expression).
+				$this->error('Not implemented: dynamic assignment');
+			}
+			$node->child = $tree->list['value'];
+			$tree = $node;
+			return true;
+		}
+		return false;
+	}
+	
+	// Grammar should be: if [{elseif}] [else]
+	function meta_if(&$tree)
+	{
+		if ($tree->name === 'if') {
+			echo "found IF\n";
+			$expr = $tree->list['expr'];
+			$tree = new ConditionalNode();
+			$tree->expr = $expr;
+			
+			$this->fragment($tree->left);
+			$tree->left->body = true;
+			$tree->right = array_pop($tree->left->list);
+			if ($tree->right->name === '/if' || $this->meta_elseif($tree->right) || $this->meta_else($tree->right)) {
+				return true;
+			} else {
+				$this->error('Expecting end of conditional');
+			}
+		}
+		return false;
+	}
+	
+	// This is left recursive, not good.
+	function meta_elseif(&$tree)
+	{
+		// Temporary solution -- nest the else if:
+		// else { if (expr) { } }
+		$tree->name = 'if';
+		return $this->meta_if($tree);
+		
+//		if ($tree->name === 'elseif') {
+//			echo "found ELSEIF\n";
+//			return true;
+//		}
+//		return false;
+	}
+	
+	function meta_else(&$tree)
+	{
+		if ($tree->name === 'else') {
+			echo "found ELSE\n";
+			$this->fragment($tree);
+			$tree->body = true;
+			$end = array_pop($tree->list);
+			if ($end->name === '/if') {
+				return true;
+			} else {
+				$this->error('Expecting end of conditional');
+			}
+		}
+		return false;
+	}
+	
+	function meta_for(&$tree)
+	{
+		if ($tree->name === 'for') {
+			return true;
+		}
+		return false;
+	}
+	
+	function meta_rows(&$tree)
+	{
+		if ($tree->name === 'rows') {
+			return true;
+		}
+		return false;
+	}
+	
+	function meta_comment(&$tree) {
+		if ($this->peek('<@!')) {
+			$tree = new CommentNode();
+			while ($this->char !== '>') {
+				$tree->value .= $this->char;
+				$this->next_raw();
+			}
+			$this->expect('>');
+			$tree->value = trim($tree->value);
 			return true;
 		}
 		return false;
@@ -419,9 +675,12 @@ class WitangoParser extends GenericParser
 	function parens(&$tree)
 	{
 		if ($this->peek('(')) {
+			echo "OPEN PARENS\n";
 			$tree = new ParenNode();
 			$this->expression($tree->child);
 			$this->expect(')');
+			echo "CLOSE PARENS\n";
+			var_dump($this->char);
 			return true;
 		}
 		return false;
@@ -443,10 +702,10 @@ class WitangoParser extends GenericParser
 			$this->next();
 		}
 	}
-							  
-							  function is_whitespace() {
-								return false !== strpos(" \t\r\n", $this->char);
-							  }
+	
+	function is_whitespace() {
+		return false !== @strpos(" \t\r\n", $this->char);
+	}
 }
 
 
@@ -457,15 +716,15 @@ class GenericParser
 	
 	public function __construct($code)
 	{
-		preg_match_all('#(?:@@|<@|<=|>=|!=|.)#', $code, $list);
-		$this->code = $list[0];
+		//preg_match_all('#(?:@@|<@|</@|<=|>=|!=|.)#', $code, $list);
+		$this->code = $code;
 		$this->pos = -1;
-		$this->next();
+		$this->next_raw();
 	}
 	
 	public function is_eof()
 	{
-		return $this->pos >= count($this->code);
+		return $this->pos >= strlen($this->code);
 	}
 	
 	function next_raw()
@@ -473,9 +732,13 @@ class GenericParser
 		return $this->char = @$this->code[++$this->pos];
 	}
 
-	function next()
+	function next($distance = 1)
 	{
-		while (false !== strpos(" \t\r\n", @$this->code[++$this->pos])) {}
+		$i = 0;
+		// Advance given distance, plus past any ending whitespace.
+		while ($i++ < $distance || false !== @strpos(" \t\r\n", $this->code[$this->pos])) {
+			$this->pos++;
+		}
 		return $this->char = @$this->code[$this->pos];
 	}
 
@@ -506,25 +769,28 @@ class GenericParser
 		return $this->is_alpha($char) || $this->is_digit($char);
 	}
 	
-	public function peek($char)
+	public function peek($str)
 	{
-		if ($this->char === $char) {
-			$this->next();
+		$len = strlen($str);
+		if ($str === substr($this->code, $this->pos, $len)) {
+			$this->next($len);
 			return true;
 		}
 		return false;
 	}
 	
-	public function expect($char)
+	public function expect($str)
 	{
-		if (!$this->peek($char)) {
-			$this->error('Expected ' . $char);
+		if (!$this->peek($str)) {
+			$this->error('Expected ' . $str);
 		}
 	}
 	
 	public function error($msg)
 	{
-		throw new ParseError($this, $msg);
+		$lines = explode("\n", substr($this->code, 0, $this->pos + 1));
+		
+		throw new ParseError($this, $msg . ' on line ' . count($lines) . ': ' . $lines[count($lines) - 1]);
 	}
 }
 
@@ -551,6 +817,7 @@ class ParseError extends Exception
 //$src->fragment($tree);
 //echo $tree->text();
 //print_r($tree);
+
 
 
 
