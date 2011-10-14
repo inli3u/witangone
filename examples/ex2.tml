@@ -1,0 +1,4 @@
+<select name="ampm" size="1">
+  <option value="0" <@ifequal 'prefix<@var name="request$event[1,1]" format="datetime:%p">' 'AM'>selected</@if>>a.m.</option>
+  <option value="12" <@ifequal '<@var name="request$event[1,1]" format="datetime:%p">' 'PM'>selected</@if>>p.m.</option>
+</select>

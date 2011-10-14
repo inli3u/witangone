@@ -1,0 +1,1 @@
+<@filter array='request$members' expr='(#5 = Suspended) OR (#5 = Expelled) OR (#5 = Demitted) OR (#5 = Married) OR (#5 = Died) OR (#5 = "Age Majority")'>

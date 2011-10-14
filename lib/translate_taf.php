@@ -1,5 +1,7 @@
 <?php
 
+require_once('witangone.php');
+
 $file = @$argv[1];
 $out_file = @$argv[2];
 
@@ -14,13 +16,17 @@ $skipped = 0;
 $skip_list = '';
 
 // Translate.
+$w = new Witangone();
 $src = "<?php\n\n" . taf_list($xml->Program->children());
 
+if (strlen($skip_list)) {
+	$src .= "\n/*\n";
+	$src .= "Skipped $skipped actions:\n";
+	$src .= $skip_list;
+	$src .= "*/\n";
+}
 
-$src .= "\n/*\n";
-$src .= "Skipped $skipped actions:\n";
-$src .= $skip_list;
-$src .= "*/\n";
+$src = $w->indentify($src);
 
 if (strlen($out_file)) {
 	file_put_contents($out_file, $src);
@@ -35,7 +41,7 @@ function get_indent($level)
 	return str_repeat('    ', $level);
 }
 
-function get_action($id)
+function get_node($id)
 {
 	global $xml;
 	$list = $xml->xpath("//*[@ID='$id']");
@@ -52,7 +58,7 @@ function taf_list($node_list, $level = 0)
 	
 	$src = '';
 	foreach ($node_list as $node) {
-		$action = get_action((string)$node['Ref']);
+		$action = get_node((string)$node['Ref']);
 		
 		//echo "Encountered '" . $action->getName() . "'\n";
 		$xlate = 'taf_' . $action->getName();
@@ -68,7 +74,9 @@ function taf_list($node_list, $level = 0)
 
 function taf_IfAction($node, $action, $level)
 {
-	$expr = (string)$action->Expression;
+	global $w;
+	$ws = (string)$action->Expression;
+	$expr = $w->expression($ws);
 	$src = get_indent($level) . "if ($expr)\n";
 	$src .= get_indent($level) . "{\n";
 	$src .= taf_list($node->children(), $level + 1);
@@ -78,7 +86,9 @@ function taf_IfAction($node, $action, $level)
 
 function taf_ElseIfAction($node, $action, $level)
 {
-	$expr = (string)$action->Expression;
+	global $w;
+	$ws = (string)$action->Expression;
+	$expr = $w->expression($ws);
 	$src = get_indent($level) . "elseif ($expr)\n";
 	$src .= get_indent($level) . "{\n";
 	$src .= taf_list($node->children(), $level + 1);
@@ -88,7 +98,6 @@ function taf_ElseIfAction($node, $action, $level)
 
 function taf_ElseAction($node, $action, $level)
 {
-	$expr = (string)$action->Expression;
 	$src = get_indent($level) . "else\n";
 	$src .= get_indent($level) . "{\n";
 	$src .= taf_list($node->children(), $level + 1);
@@ -100,9 +109,16 @@ function taf_ForAction($node, $action, $level)
 {
 	$var = '$' . $action->LoopVariable;
 	$start = (string)$action->Start;
-	$stop = (string)$action->Stop;
+	$stop_ws = (string)$action->Stop;
+	
+	// Helper function for this. Needs the CONSUMED flag.
+	$w = new WitangoParser($stop_ws);
+	$w->fragment($tree);
+	$p = new PHPTranslator();
+	$stop = $p->visit($tree, PHPTranslator::CONSUMED);
+	
 	$inc = (string)$action->Increment;
-	$src = get_indent($level) . "for ($var = $start; $var <= '$stop'; $var += $inc)\n";
+	$src = get_indent($level) . "for ($var = $start; $var <= $stop; $var += $inc)\n";
 	$src .= get_indent($level) . "{\n";
 	$src .= taf_list($node->children(), $level + 1);
 	$src .= get_indent($level) . "}\n";
@@ -113,7 +129,13 @@ function taf_AssignAction($node, $action, $level)
 {
 	$src = '';
 	foreach ($action->AssignItem as $item) {
-		$src .= get_indent($level) . '$' . $item->Name . " = '" . $item->Value . "';\n";
+		// Helper function for this. Needs the CONSUMED flag.
+		$w = new WitangoParser((string)$item->Value);
+		$w->fragment($tree);
+		$p = new PHPTranslator();
+		$value = $p->visit($tree, PHPTranslator::CONSUMED);
+		
+		$src .= get_indent($level) . '$' . $item->Name . " = " . $value . ";\n";
 	}
 	return $src;
 }
@@ -137,7 +159,10 @@ function taf_ReturnAction($node, $action, $level)
 
 function taf_ResultAction($node, $action, $level)
 {
-	return get_indent($level) . "// Result Action.\n";
+	global $w;
+	$output = get_node((string)$action->ResultsOutput['Ref']);
+	return $w->translate((string)$output);
+	//return get_indent($level) . "// Result Action.\n";
 }
 
 function taf_DirectDBMSAction($node, $action, $level)

@@ -1,0 +1,7 @@
+<@if expr="(<@ARG hour> = 12) and (<@ARG ampm> = 12)"> <@! if noon>
+<@assign name="hour" scope="local" value="12">
+<@elseif expr="(<@ARG hour> = 12) and (<@ARG ampm> = 0)"> <@! if midnight>
+<@assign name="hour" scope="local" value="0">
+<@else> <@! if anything else>
+<@assign name="hour" scope="local" value="green_<@calc expr='<@ARG hour> + <@ARG ampm>'>">
+</@if>
