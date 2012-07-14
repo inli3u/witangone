@@ -1,3 +1,4 @@
+#!/usr/bin/php
 <?php
 
 require_once('lib/witango_parser.php');
