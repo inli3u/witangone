@@ -108,8 +108,11 @@ class GenericParser
 	
 	public function error($msg)
 	{
-		$lines = explode("\n", substr($this->code, 0, $this->pos + 1));
+        $code_so_far = substr($this->code, 0, $this->pos + 1);
+        $lines = explode("\n", $code_so_far);
+		$line = count($lines);
+        $char = $this->pos - strrpos($code_so_far, "\n");
 		
-		throw new ParseError($this, $msg . ' on line ' . count($lines) . ': ' . $lines[count($lines) - 1]);
+		throw new ParseError($this, $msg . ' on line ' . $line . ', char ' . $char . ': ' . $lines[count($lines) - 1]);
 	}
 }

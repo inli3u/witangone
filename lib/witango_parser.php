@@ -574,17 +574,12 @@ class WitangoParser extends GenericParser
 			}
 		}
 		
-		var_dump($terminator);
-		
 		// This is a string only if we have determined a terminator char.
 		if ($terminator !== null) {
 			$tree = new StringNode();
 			$text = new TextNode();
 			$n = null;
 			
-			echo "----------\n";
-			var_dump($quote);
-			var_dump($terminator);
 			while ($this->char !== $terminator && $this->char !== ')' && $this->char !== '>') {
 				//echo $this->char . "\n";
 				if ($this->variable($n) || $this->meta_tag($n)) {
@@ -598,8 +593,12 @@ class WitangoParser extends GenericParser
 					$this->next_raw();
 				}
 			}
-			//$this->expect($terminator);
-			$this->next_raw();
+
+            // If terminator is a quote it needs to be eaten. Otherwise
+            // the terminator is part of another node and should be left.
+            if ($terminator !== ' ') {
+                $this->expect($terminator);
+            }
 			
 			if (strlen($text->value)) {
 				$tree->list[] = $text;

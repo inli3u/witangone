@@ -23,9 +23,8 @@ class PHPTranslator extends NodeVisitor
 	private $depth = 0;
 	private $indent_level = 0;
 	private $target = array();
-	
 
-	
+
 	public function visit($node, $flags = 0)
 	{
 		// The stack of consumed states is maintained in this recursive call stack.
@@ -159,16 +158,24 @@ class PHPTranslator extends NodeVisitor
 		
 		$args = array();
 		switch ($node->name) {
+            case 'addrows':
+                $name = 'ws_addrows';
+                $args[] = $list['array'];
+                $args[] = $list['value'];
+                if (array_key_exists('position', $list)) {
+                    $args[] = $list['position'];
+                }
+                break;
 			case 'appfile':
 				$name = 'ws_appfile';
 				break;
 			case 'array':
 				$name = 'ws_array';
-				$args = array($list['value']);
 				$args[] = strlen(@$list['rows']) ? $list['rows'] : 'null';
 				$args[] = strlen(@$list['cols']) ? $list['cols'] : 'null';
-				$args[] = strlen(@$list['cdelim']) ? $list['cdelim'] : 'null';
-				$args[] = strlen(@$list['rdelim']) ? $list['rdelim'] : 'null';
+				if (array_key_exists('value', $list)) { $args[] = $list['value']; }
+				if (array_key_exists('cdelim', $list)) { $args[] = $list['cdelim']; }
+				if (array_key_exists('rdelim', $list)) { $args[] = $list['rdelim']; }
 				break;
 			case 'cgi':
 				$name = 'ws_cgi';
@@ -230,8 +237,14 @@ class PHPTranslator extends NodeVisitor
 				$args[] = $list['array'];
 				$args[] = $list['cols'];
 				break;
+            case 'varinfo':
+                $name = 'ws_varinfo';
+                $args[] = $list['name'];
+                $args[] = $list['attribute'];
+                break;
 			default:
 				$name = '// UNKNOWN FUNCTION "' . $node->name . '"';
+                echo 'unknwon function: ' . $node->name . "\n";
 		}
 		
 		return $name . '(' . implode(', ', $args) . ')';
@@ -251,6 +264,20 @@ class PHPTranslator extends NodeVisitor
 		$block = $this->visit($node->child);
 		return "if ($left == $right) {\n$block}\n";
 	}
+
+    public function meta_ifempty($node)
+    {
+        $value = $this->visit($node->list['value'], self::CONSUMED);
+		$block = $this->visit($node->child);
+		return "if ($value == null) {\n$block}\n";
+    }
+
+    public function meta_ifnotempty($node)
+    {
+        $value = $this->visit($node->list['value'], self::CONSUMED);
+		$block = $this->visit($node->child);
+		return "if ($value != null) {\n$block}\n";
+    }
 	
 	public function meta_elseif($node)
 	{
@@ -264,6 +291,11 @@ class PHPTranslator extends NodeVisitor
 		$block = $this->visit($node->child);
 		return "else {\n$block}\n";
 	}
+
+    public function meta_debug($node)
+    {
+        // TODO: support this.
+    }
 	
 	public function meta_arg($node)
 	{
@@ -296,9 +328,9 @@ class PHPTranslator extends NodeVisitor
 	
 	public function meta_filter($node)
 	{
-		$expr = $this->visit($node->expr);
-		$array = $this->visit($node->array);
-		$src = "foreach ($array as \$_row) {\nreturn $expr; }\n";
+		$expr = $this->visit($node->list['expr']);
+		$array = $this->visit($node->list['array']);
+		$src = "array_filter($array, function(\$row) { return $expr; })";
 		return $src;
 	}
 	
@@ -357,6 +389,11 @@ class PHPTranslator extends NodeVisitor
 		$n->list = $node->list;
 		return $this->visit($n, self::CONSUMED);
 	}
+
+    public function visit_FilterVariableNode(FilterVariableNode $node)
+    {
+        return '$row[' . ($node->name - 1) . ']';
+    }
 	
 	public function visit_TextNode(TextNode $node)
 	{
@@ -394,7 +431,7 @@ class PHPTranslator extends NodeVisitor
 		
 		if ($node->array_accessor) {
 			foreach ($node->array_accessor->list as $value) {
-				$src .= '[' . $this->visit($value) . ']';
+				$src .= '[' . $this->visit($value) . ' - 1]';
 			}
 		}
 		

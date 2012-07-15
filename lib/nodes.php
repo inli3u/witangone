@@ -106,6 +106,11 @@ class MetaTagNode extends UnaryNode
 	
 	const REQUIRED = 1;
 	public static $attr_defs = array(
+        'addrows' => array(
+            'array' => array('variable_ident', 0, self::REQUIRED),
+            'value' => array('fragment', 1, self::REQUIRED),
+            'position' => array('fragment', 2),
+        ),
 		'assign' => array(
 			'name' => array('variable_ident', 0, self::REQUIRED),
 			'value' => array('fragment', 1, self::REQUIRED),
@@ -128,6 +133,8 @@ class MetaTagNode extends UnaryNode
 			'date1' => array('fragment', 0, self::REQUIRED),
 			'date2' => array('fragment', 1, self::REQUIRED),
 		),
+        'debug' => array(
+        ),
 		'lower' => array(
 			'str' => array('fragment', 0, self::REQUIRED),
 		),
@@ -160,6 +167,12 @@ class MetaTagNode extends UnaryNode
 			'true',
 			'false',
 		),
+        'ifempty' => array(
+            'value' => array('fragment', 0, self::REQUIRED),
+        ),
+        'ifnotempty' => array(
+            'value' => array('fragment', 0, self::REQUIRED),
+        ),
 		'elseif' => array(
 			'expr' => array('expression', 0, self::REQUIRED),
 		),
@@ -198,6 +211,10 @@ class MetaTagNode extends UnaryNode
 			'cols' => array('fragment'),
 			'scope' => array('fragment'),
 		),
+        'varinfo' => array(
+            'name' => array('variable_ident', 0, self::REQUIRED),
+            'attribute' => array('fragment', 1),
+        ),
 	);
 	
 }

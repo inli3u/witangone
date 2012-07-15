@@ -1,40 +1,30 @@
 <?php
 
-require_once('witangone.php');
-
-$file = @$argv[1];
-$out_file = @$argv[2];
-
-if (!strlen($file)) {
-	die("Usage: translate file\n");
-}
-
-$file_contents = file_get_contents($file);
-$xml = new SimpleXMLElement($file_contents);
-
+$xml = null;
 $skipped = 0;
 $skip_list = '';
-
-// Translate.
 $w = new Witangone();
-$src = "<?php\n\n" . taf_list($xml->Program->children());
 
-if (strlen($skip_list)) {
-	$src .= "\n/*\n";
-	$src .= "Skipped $skipped actions:\n";
-	$src .= $skip_list;
-	$src .= "*/\n";
+
+function translate_taf($code)
+{
+    global $xml, $skipped, $skip_list;
+
+    $xml = new SimpleXMLElement($code);
+
+    $src = "<?php\n\n" . taf_list($xml->Program->children());
+
+    if (strlen($skip_list)) {
+        $src .= "\n/*\n";
+        $src .= "Skipped $skipped actions:\n";
+        $src .= $skip_list;
+        $src .= "*/\n";
+    }
+
+    return $src;
 }
 
-$src = $w->indentify($src);
 
-if (strlen($out_file)) {
-	file_put_contents($out_file, $src);
-} else {
-	echo $src;
-}
-
-exit;
 
 function get_indent($level)
 {
@@ -161,37 +151,43 @@ function taf_ResultAction($node, $action, $level)
 {
 	global $w;
 	$output = get_node((string)$action->ResultsOutput['Ref']);
-	return $w->translate((string)$output);
+	return $w->translate_script((string)$output);
 	//return get_indent($level) . "// Result Action.\n";
 }
 
 function taf_DirectDBMSAction($node, $action, $level)
 {
+    echo "not implemented: DirectDBMSAction\n";
 	return get_indent($level) . "// Direct SQL Query.\n";
 }
 
 function taf_SearchAction($node, $action, $level)
 {
+    echo "not implemented: SearchAction\n";
 	return get_indent($level) . "// SQL Query.\n";
 }
 
 function taf_InsertAction($node, $action, $level)
 {
+    echo "not implemented: InsertAction\n";
 	return get_indent($level) . "// SQL Insert.\n";
 }
 
 function taf_UpdateAction($node, $action, $level)
 {
+    echo "not implemented: UpdateAction\n";
 	return get_indent($level) . "// SQL Update.\n";
 }
 
 function taf_DeleteAction($node, $action, $level)
 {
+    echo "not implemented: DeleteAction\n";
 	return get_indent($level) . "// SQL Delete.\n";
 }
 
 function taf_MailAction($node, $action, $level)
 {
+    echo "not implemented: MailAction\n";
 	return get_indent($level) . "// Mail Action.\n";
 }
 

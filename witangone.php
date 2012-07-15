@@ -3,11 +3,29 @@
 
 require_once('lib/witango_parser.php');
 require_once('lib/php_translator.php');
+require_once('lib/translate_taf.php');
 
 
 class Witangone
 {
-	public function translate($code, $flags = array())
+    public function translate_file($filename, $flags = array())
+    {
+        $path = pathinfo($filename);
+        switch ($path['extension']) {
+            case 'taf':
+                return translate_taf(file_get_contents($filename), $flags);
+            case 'tml':
+            case 'html':
+                return translate_script(file_get_contents($filename), $flags);
+        }
+    }
+
+    public function translate_taf($code, $flags = array())
+    {
+        return $this->prettify(translate_taf($code)); 
+    }
+
+	public function translate_script($code, $flags = array())
 	{
 		$w = new WitangoParser($code);
 		$w->fragment($tree);
@@ -17,11 +35,11 @@ class Witangone
 		} elseif (in_array('-p', $flags)) {
 			return print_r($tree);
 		} else {
-			return $this->indentify($this->toPHP($tree));
+			return $this->prettify($this->to_php($tree));
 		}
 	}
 	
-	public function toPHP($tree)
+	public function to_php($tree)
 	{
 		$translator = new PHPTranslator();
 		return $translator->visit($tree);
@@ -32,10 +50,10 @@ class Witangone
 		$w = new WitangoParser($code);
 		$tree = null;
 		$w->expression($tree);
-		return $this->toPHP($tree);
+		return $this->to_php($tree);
 	}
 	
-	public function indentify($code)
+	public function prettify($code)
 	{
 		$in = explode("\n", $code);
 		$out = array();
@@ -73,12 +91,12 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 	if (!file_exists($filename)) {
 		die("Could not find file '$filename'\n");
 	}
-	$expr = file_get_contents($filename);
 	
 	$w = new Witangone();
 	$w->debug = true;
-	echo $w->translate($expr, $argv);
-	echo "\n";
+	$src = $w->translate_file($filename, $argv);
+    $path = pathinfo($filename);
+    file_put_contents($path['dirname'] . '/' . $path['filename'] . '.php', $src);
 }
 
 /*
