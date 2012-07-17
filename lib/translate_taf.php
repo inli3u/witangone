@@ -1,5 +1,8 @@
 <?php
 
+require_once('nodes.php');
+
+
 $xml = null;
 $skipped = 0;
 $skip_list = '';
@@ -163,8 +166,27 @@ function taf_DirectDBMSAction($node, $action, $level)
 
 function taf_SearchAction($node, $action, $level)
 {
-    echo "not implemented: SearchAction\n";
-	return get_indent($level) . "// SQL Query.\n";
+    $tables = array();
+    foreach ($action->Tables->children() as $table) {
+        $tables[] = (string)$table;
+    }
+
+    $columns = array();
+    foreach ($action->SearchColumns->children() as $column) {
+        $columns[] = (string)$column->TableName . '.' . (string)$column->ColumnName;
+    }
+
+    $criteria = array();
+
+    $output = '$' . $action->ResultSet['Name'];
+
+    $columns_str = implode(', ', $columns);
+    $tables_str = implode(', ', $tables);
+    $sql = "SELECT $columns_str FROM $tables_str";
+
+    // TODO: needs to support include empty == false.
+
+	return get_indent($level) . "$output = query(\"$sql\");\n";
 }
 
 function taf_InsertAction($node, $action, $level)
