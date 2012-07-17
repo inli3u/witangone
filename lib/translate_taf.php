@@ -15,16 +15,14 @@ function translate_taf($code)
 
     $xml = new SimpleXMLElement($code);
 
-    $src = "<?php\n\n" . taf_list($xml->Program->children());
+    $tree = null;
+    taf_list($tree, $xml->Program->children());
 
     if (strlen($skip_list)) {
-        $src .= "\n/*\n";
-        $src .= "Skipped $skipped actions:\n";
-        $src .= $skip_list;
-        $src .= "*/\n";
+        echo "Skipped $skip_list\n";
     }
 
-    return $src;
+    return $tree;
 }
 
 
