@@ -1,9 +1,10 @@
 #!/usr/bin/php
 <?php
 
-require_once('lib/witango_parser.php');
-require_once('lib/php_translator.php');
-require_once('lib/translate_taf.php');
+require_once('lib/taf_parser.php');
+require_once('lib/script_parser.php');
+require_once('lib/taf_translator.php');
+require_once('lib/script_translator.php');
 
 
 class Witangone
@@ -13,16 +14,19 @@ class Witangone
         $path = pathinfo($filename);
         switch ($path['extension']) {
             case 'taf':
-                return translate_taf(file_get_contents($filename), $flags);
+                return $this->translate_taf(file_get_contents($filename), $flags);
             case 'tml':
             case 'html':
-                return translate_script(file_get_contents($filename), $flags);
+                return $this->translate_script(file_get_contents($filename), $flags);
         }
     }
 
     public function translate_taf($code, $flags = array())
     {
-        return $this->prettify(translate_taf($code)); 
+        $parser = new TafParser($code);
+        $tree = $parser->parse();
+        $translator = new TafTranslator();
+        return $this->prettify($translator->visit($tree)); 
     }
 
 	public function translate_script($code, $flags = array())
@@ -30,27 +34,23 @@ class Witangone
 		$w = new WitangoParser($code);
 		$w->fragment($tree);
 		$tree->statement = true;
+
 		if (in_array('-t', $flags)) {
 			return $tree->text();
 		} elseif (in_array('-p', $flags)) {
 			return print_r($tree);
 		} else {
-			return $this->prettify($this->to_php($tree));
+            $translator = new ScriptTranslator();
+			return $this->prettify($translator->visit($tree));
 		}
-	}
-	
-	public function to_php($tree)
-	{
-		$translator = new PHPTranslator();
-		return $translator->visit($tree);
 	}
 	
 	public function expression($code)
 	{
-		$w = new WitangoParser($code);
-		$tree = null;
-		$w->expression($tree);
-		return $this->to_php($tree);
+		$parser = new ScriptParser($code);
+		$parser->expression($tree);
+        $translator = new ScriptTranslator();
+		return $translator->visit($tree);
 	}
 	
 	public function prettify($code)

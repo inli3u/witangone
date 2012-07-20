@@ -2,6 +2,26 @@
 
 class Node
 {
+}
+
+class ActionNode extends Node
+{
+}
+
+class ActionNodeList extends ActionNode
+{
+    public $list = array();
+}
+
+class IfActionNode extends ActionNode
+{
+}
+
+
+
+
+class ScriptNode extends Node
+{
 	public $parent;
 	public $name;
 	public $value;
@@ -16,7 +36,7 @@ class Node
 	
 }
 
-class UnaryNode extends Node
+class UnaryNode extends ScriptNode
 {
 	public $child;
 	
@@ -28,7 +48,7 @@ class UnaryNode extends Node
 	}
 }
 
-class BinaryNode extends Node
+class BinaryNode extends ScriptNode
 {
 	public $left;
 	public $right;
@@ -44,7 +64,7 @@ class BinaryNode extends Node
 	}
 }
 
-class ListNode extends Node
+class ListNode extends ScriptNode
 {
 	public $list = array();
 	
@@ -67,7 +87,7 @@ class ListNode extends Node
 	}
 }
 
-class NoopNode extends Node
+class NoopNode extends ScriptNode
 {
 }
 
@@ -246,7 +266,7 @@ class ExpressionFuncNode extends UnaryNode
 	
 }
 
-class NumberNode extends Node
+class NumberNode extends ScriptNode
 {
 }
 
@@ -254,7 +274,7 @@ class StringNode extends ListNode
 {
 }
 
-class FilterVariableNode extends Node
+class FilterVariableNode extends ScriptNode
 {
 	public $name;
 }
@@ -263,10 +283,10 @@ class ParenNode extends UnaryNode
 {
 }
 
-class TextNode extends Node
+class TextNode extends ScriptNode
 {
 }
 
-class CommentNode extends Node
+class CommentNode extends ScriptNode
 {
 }

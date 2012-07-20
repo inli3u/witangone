@@ -1,22 +1,10 @@
 <?php
 
 require_once('nodes.php');
+require_once('ast_visitor.php');
 
-class NodeVisitor
-{
-	public function visit($node)
-	{
-		$method = 'visit_' . get_class($node);
-		if (method_exists($this, $method)) {
-			//echo "calling $method\n";
-			return call_user_func(array($this, $method), $node);
-		} else {
-			return false;
-		}
-	}
-}
 
-class PHPTranslator extends NodeVisitor
+class ScriptTranslator extends AstVisitor
 {
 	const CONSUMED = 1;
 	private $is_consumed = false;
@@ -25,7 +13,7 @@ class PHPTranslator extends NodeVisitor
 	private $target = array();
 
 
-	public function visit($node, $flags = 0)
+	public function visit(ScriptNode $node, $flags = 0)
 	{
 		// The stack of consumed states is maintained in this recursive call stack.
 		$last_consumed = $this->is_consumed;
