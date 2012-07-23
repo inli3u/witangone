@@ -1,6 +1,7 @@
 <?php
 
 require_once('nodes.php');
+require_once('script_parser.php');
 
 
 class TafParser
@@ -8,21 +9,21 @@ class TafParser
     private $xml;
     private $skipped = 0;
     private $skip_list = '';
-    private $w = null;
 
     public function __construct($code)
     {
-        $this->w = new Witangone();
         $this->xml = new SimpleXMLElement($code);
     }
 
     public function parse()
     {
-        $this->parse_list($tree, $this->xml->Program->children());
+        $tree = $this->parse_list($this->xml->Program->children());
 
         if (strlen($this->skip_list)) {
-            echo "Skipped {$this->skip_list}\n";
+            echo "Skipped:\n{$this->skip_list}\n";
         }
+
+		return $tree;
     }
 
 
@@ -65,96 +66,80 @@ class TafParser
     function parse_IfAction($node, $action)
     {
         $tree = new IfActionNode();
-        $tree->list['expr'] = $this->w->expression((string)$action->Expression);
+
+		$expr = (string)$action->Expression;
+		if ('(' === substr($expr, 0, 1) && ')' === substr($expr, -1, 1)) {
+			$expr = substr($expr, 1, -1);
+		}
+
+        $tree->list['expr'] = ScriptParser::get_expression($expr);
         $tree->list['block'] = $this->parse_list($node->children());
         return $tree;
-
-        $src = "if ($expr)\n";
-        $src .= "{\n";
-        $src .= $this->parse_list($node->children() + 1);
-        $src .= "}\n";
-        return $src;
     }
 
     function parse_ElseIfAction($node, $action)
     {
-        return null;
+        $tree = new ElseIfActionNode();
 
-        $ws = (string)$action->Expression;
-        $expr = $this->w->expression($ws);
-        $src = "elseif ($expr)\n";
-        $src .= "{\n";
-        $src .= $this->parse_list($node->children() + 1);
-        $src .= "}\n";
-        return $src;
+		$expr = (string)$action->Expression;
+		if ('(' === substr($expr, 0, 1) && ')' === substr($expr, -1, 1)) {
+			$expr = substr($expr, 1, -1);
+		}
+
+        $tree->list['expr'] = ScriptParser::get_expression($expr);
+        $tree->list['block'] = $this->parse_list($node->children());
+        return $tree;
     }
 
     function parse_ElseAction($node, $action)
     {
-        return null;
-
-        $src = "else\n";
-        $src .= "{\n";
-        $src .= $this->parse_list($node->children() + 1);
-        $src .= "}\n";
-        return $src;
+        $tree = new ElseActionNode();
+        $tree->list['block'] = $this->parse_list($node->children());
+        return $tree;
     }
 
     function parse_ForAction($node, $action)
     {
-        return null;
-
-        $var = '$' . $action->LoopVariable;
-        $start = (string)$action->Start;
-        $stop_ws = (string)$action->Stop;
+		$tree = new ForActionNode();
+        $tree->variable = $action->LoopVariable;
+        $tree->start = (string)$action->Start;
+		$tree->increment = (string)$action->Increment;
+        $tree->list['stop'] = ScriptParser::get_fragment((string)$action->Stop);
+		$tree->list['block'] = $this->parse_list($node->children());
         
-        // Helper function for this. Needs the CONSUMED flag.
-        $w = new WitangoParser($stop_ws);
-        $this->w->fragment($tree);
-        $p = new PHPTranslator();
-        $stop = $p->visit($tree, PHPTranslator::CONSUMED);
-        
-        $inc = (string)$action->Increment;
-        $src = "for ($var = $start; $var <= $stop; $var += $inc)\n";
-        $src .= "{\n";
-        $src .= $this->parse_list($node->children() + 1);
-        $src .= "}\n";
-        return $src;
+		return $tree;
     }
 
     function parse_AssignAction($node, $action)
     {
-        return null;
+		// TODO: support script in variable names.
+		$tree = new AssignActionNode();
 
-        $src = '';
         foreach ($action->AssignItem as $item) {
-            // Helper function for this. Needs the CONSUMED flag.
-            $w = new WitangoParser((string)$item->Value);
-            $this->w->fragment($tree);
-            $p = new PHPTranslator();
-            $value = $p->visit($tree, PHPTranslator::CONSUMED);
-            
-            $src .= '$' . $item->Name . " = " . $value . ";\n";
+			$tree->list[(string)$item->Name] = ScriptParser::get_fragment((string)$item->Value);
         }
-        return $src;
+
+		return $tree;
     }
 
     function parse_PresentationAction($node, $action)
     {
-        return null;
+		$tree = new PresentationActionNode();
 
         if (strlen($action->PagePath)) {
-            return "require('" . $action->PagePath . "');\n";
+			$tree->path = $action->PagePath;
         } elseif (strlen($action->ServerPath)) {
             die("Don't know how to handle ServerPath!\n");
-        }
+		} else {
+			die("Unknown path type\n");
+		}
+
+		return $tree;
     }
 
     function parse_ReturnAction($node, $action)
     {
-        return null;
-
-        return "return;\n";
+		return new ReturnActionNode();
     }
 
 
@@ -162,19 +147,23 @@ class TafParser
 
     function parse_ResultAction($node, $action)
     {
-        return null;
-
-        $output = $this->get_node((string)$action->ResultsOutput['Ref']);
-        return $this->w->translate_script((string)$output);
-        //return "// Result Action.\n";
+		$tree = new ResultsActionNode();
+        $output = (string)$this->get_node((string)$action->ResultsOutput['Ref']);
+        $tree->list['script'] = ScriptParser::get_fragment($output);
+		return $tree;
     }
 
     function parse_DirectDBMSAction($node, $action)
     {
-        echo "not implemented: DirectDBMSAction\n";
-        return "// Direct SQL Query.\n";
+		$tree = new DirectDBMSActionNode($node, $action);
+		$tree->list['sql'] = ScriptParser::get_fragment((string)$action->Custom);
+		$tree->start_row = (string)$action->StartRow;
+		$tree->result_type = (string)$action->ResultSet['Type'];
+		$tree->list['result_ident'] = ScriptParser::get_variable_ident((string)$action->ResultSet['Name']);
+        return $tree;
     }
 
+	/*
     function parse_SearchAction($node, $action)
     {
         return null;
@@ -225,5 +214,6 @@ class TafParser
         echo "not implemented: MailAction\n";
         return "// Mail Action.\n";
     }
+	 */
 
 }

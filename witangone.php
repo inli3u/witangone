@@ -26,13 +26,13 @@ class Witangone
         $parser = new TafParser($code);
         $tree = $parser->parse();
         $translator = new TafTranslator();
-        return $this->prettify($translator->visit($tree)); 
+		return "<?php\n\n" . $this->prettify($translator->visit($tree)); 
     }
 
 	public function translate_script($code, $flags = array())
 	{
-		$w = new WitangoParser($code);
-		$w->fragment($tree);
+		$parser = new WitangoParser($code);
+		$parser->fragment($tree);
 		$tree->statement = true;
 
 		if (in_array('-t', $flags)) {
@@ -45,14 +45,9 @@ class Witangone
 		}
 	}
 	
-	public function expression($code)
-	{
-		$parser = new ScriptParser($code);
-		$parser->expression($tree);
-        $translator = new ScriptTranslator();
-		return $translator->visit($tree);
-	}
-	
+	/**
+	 * Indents PHP source code.
+	 */
 	public function prettify($code)
 	{
 		$in = explode("\n", $code);
@@ -99,14 +94,3 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
     file_put_contents($path['dirname'] . '/' . $path['filename'] . '.php', $src);
 }
 
-/*
- * For Any given fragment, determine if each element is a statement or expression.
- * statements are: statement;
- * expressions are: echo expression;
- * advanced - join adjacent expressions: echo expression . expression;
- */
-
-//$tree = null;
-//$src = new WitangoParser($expr);
-//$src->fragment($tree);
-//print_r($tree);

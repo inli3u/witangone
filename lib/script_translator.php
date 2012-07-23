@@ -7,11 +7,24 @@ require_once('ast_visitor.php');
 class ScriptTranslator extends AstVisitor
 {
 	const CONSUMED = 1;
+	const EXPRESSION = 1;
+	const STDOUT = 2;
+	const VARIABLE = 3;
 	private $is_consumed = false;
 	private $depth = 0;
 	private $indent_level = 0;
 	private $target = array();
 
+
+	public function push_output($type, $ident = null)
+	{
+		array_push($this->target, array($type, $ident, 0));
+	}
+
+	public function pop_output()
+	{
+		array_pop($this->target);
+	}
 
 	public function visit(ScriptNode $node, $flags = 0)
 	{
@@ -42,7 +55,7 @@ class ScriptTranslator extends AstVisitor
 	public function is_control($node)
 	{
 		return $node instanceof MetaTagNode && in_array($node->name,
-				array('assign', 'if', 'ifequal', 'elseif', 'else')
+				array('assign', 'if', 'ifequal', 'ifempty', 'ifnotempty', 'elseif', 'else')
 		);
 	}
 	
@@ -56,7 +69,7 @@ class ScriptTranslator extends AstVisitor
 		$code = array();
 		
 		$target_index = count($this->target) - 1;
-		$target = @$this->target[$target_index];
+		list($target_type, $target_ident, $target_hits) = @$this->target[$target_index];
 		$target_str = '';
 				
 		foreach ($node->list as $n) {
@@ -72,23 +85,25 @@ class ScriptTranslator extends AstVisitor
 			//}
 
 			if ($this->is_expression($n)) {
-				if (!$this->is_consumed) {
-					if ($target['ident']) {
-						$target_str = $this->make_variable($target['ident']);
-						if ($this->target[$target_index]['hits'] === 0) {
+				if (!$this->is_consumed && $target_type !== self::EXPRESSION) {
+					if ($target_type === self::VARIABLE) {
+						$target_str = $this->make_variable($target_ident);
+						if ($target_hits === 0) {
 							$target_str .= ' = ';
 						} else {
 							$target_str .= ' .= ';
 						}
-						$this->target[$target_index]['hits']++;
+						// Update hits.
+						$target_hits++;
+						$this->target[$target_index][2]++;
 					} else {
 						$target_str = 'echo ';
 					}
 				}
 				$result = $target_str . $result;
-				$result .= $this->is_consumed() ? '' : ";\n";
+				$result .= $this->is_consumed() || $target_type === self::EXPRESSION ? '' : ";\n";
 			} elseif ($this->is_statement($n)) {
-				$result .= $this->is_consumed() ? '' : ";\n";
+				$result .= $this->is_consumed() || $target_type === self::EXPRESSION ? '' : ";\n";
 			} elseif ($this->is_control($n)) {
 				// Do nothing.
 			} else {
@@ -97,7 +112,7 @@ class ScriptTranslator extends AstVisitor
 
 			$code[] = $result;
 		}
-		if ($this->is_consumed) {
+		if ($this->is_consumed || $target_type === self::EXPRESSION) {
 			// concat ' . '
 			// 
 			return implode(' . ', $code);
@@ -124,7 +139,17 @@ class ScriptTranslator extends AstVisitor
 	{
 		return $node->value . $this->visit($node->child);
 	}
-		
+
+
+	public function visit_BlockMetaTagNode(BlockMetaTagNode $node)
+	{
+		// First try special case meta tags.
+		$meta_method = 'meta_' . $node->name;
+		if (method_exists($this, $meta_method)) {
+			return call_user_func(array($this, $meta_method), $node);
+		}
+	}
+
 	public function visit_MetaTagNode(MetaTagNode $node)
 	{
 		// Ignore ending tags.
@@ -137,7 +162,7 @@ class ScriptTranslator extends AstVisitor
 		if (method_exists($this, $meta_method)) {
 			return call_user_func(array($this, $meta_method), $node);
 		}
-		
+
 		// Then try a lib function.
 		$list = array();
 		foreach ($node->list as $arg_name => $arg) {
@@ -232,7 +257,7 @@ class ScriptTranslator extends AstVisitor
                 break;
 			default:
 				$name = '// UNKNOWN FUNCTION "' . $node->name . '"';
-                echo 'unknwon function: ' . $node->name . "\n";
+                echo 'Unknown function: ' . $node->name . "\n";
 		}
 		
 		return $name . '(' . implode(', ', $args) . ')';
@@ -242,36 +267,36 @@ class ScriptTranslator extends AstVisitor
 	{
 		$expr = $this->visit($node->list['expr'], self::CONSUMED);
 		$block = $this->visit($node->child);
-		return "if ($expr) {\n$block}\n";
+		return "if ($expr)\n{\n$block}\n";
 	}
 	
 	public function meta_ifequal($node)
 	{
-		$left = $this->visit($node->list['expr_left'], self::CONSUMED);
-		$right = $this->visit($node->list['expr_right'], self::CONSUMED);
+		$left = $this->visit($node->list['value1'], self::CONSUMED);
+		$right = $this->visit($node->list['value2'], self::CONSUMED);
 		$block = $this->visit($node->child);
-		return "if ($left == $right) {\n$block}\n";
+		return "if ($left == $right)\n{\n$block}\n";
 	}
 
     public function meta_ifempty($node)
     {
         $value = $this->visit($node->list['value'], self::CONSUMED);
 		$block = $this->visit($node->child);
-		return "if ($value == null) {\n$block}\n";
+		return "if ($value == null)\n{\n$block}\n";
     }
 
     public function meta_ifnotempty($node)
     {
         $value = $this->visit($node->list['value'], self::CONSUMED);
 		$block = $this->visit($node->child);
-		return "if ($value != null) {\n$block}\n";
+		return "if ($value != null)\n{\n$block}\n";
     }
 	
 	public function meta_elseif($node)
 	{
 		$expr = $this->visit($node->list['expr'], self::CONSUMED);
 		$block = $this->visit($node->child);
-		return "elseif ($expr) {\n$block}\n";
+		return "elseif ($expr)\n{\n$block}\n";
 	}
 	
 	public function meta_else($node)
@@ -283,6 +308,7 @@ class ScriptTranslator extends AstVisitor
     public function meta_debug($node)
     {
         // TODO: support this.
+		return 'null';
     }
 	
 	public function meta_arg($node)
@@ -339,9 +365,9 @@ class ScriptTranslator extends AstVisitor
 		if (!strlen($ident->scope)) {
 			$ident->scope = @$node->list['scope']->list[0]->value;
 		}
-		array_push($this->target, array('ident' => $ident, 'hits' => 0));
+		$this->push_output(self::VARIABLE, $ident);
 		$result = $this->visit($node->list['value']);
-		array_pop($this->target);
+		$this->pop_output();
 		return $result;
 	}
 
@@ -385,7 +411,7 @@ class ScriptTranslator extends AstVisitor
 	
 	public function visit_TextNode(TextNode $node)
 	{
-		return "'" . $node->value . "'";
+		return "'" . str_replace(array('\\', "'"), array('\\\\', "\\'"), $node->value) . "'";
 	}
 	
 	public function visit_ParenNode(ParenNode $node)
@@ -419,7 +445,12 @@ class ScriptTranslator extends AstVisitor
 		
 		if ($node->array_accessor) {
 			foreach ($node->array_accessor->list as $value) {
-				$src .= '[' . $this->visit($value) . ' - 1]';
+				$value_str = $this->visit($value);
+				if (is_numeric($value_str)) {
+					$src .= '[' . ($value_str - 1) . ']';
+				} else {
+					$src .= '[' . $value_str . ' - 1]';
+				}
 			}
 		}
 		

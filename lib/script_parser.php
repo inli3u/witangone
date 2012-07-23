@@ -86,10 +86,10 @@ boolean = factor {('and' | 'or')} factor}
 require_once('generic_parser.php');
 require_once('nodes.php');
 
-class WitangoParser extends GenericParser
+class ScriptParser extends GenericParser
 {
-	private static $block_start_tags = array('if', 'ifequal', 'elseif', 'else', 'for', 'rows');
-	private static $block_end_tags = array('elseif', 'else', '/if', '/for', '/rows');
+	private static $block_start_tags = array('comment', 'debug', 'if', 'ifequal', 'ifempty', 'ifnotempty', 'elseif', 'else', 'for', 'rows');
+	private static $block_end_tags = array('elseif', 'else', '/comment', '/debug', '/if', '/for', '/rows');
 	private $quote_stack = array();
 	private $deferred_meta_node = null;
 	public $tokens = array();
@@ -108,6 +108,29 @@ class WitangoParser extends GenericParser
 			return ($this->get_current_quote() == '"') ? "'" : '"';
 		}
 	}
+
+	// A few convenience methods
+	public static function get_expression($code)
+	{
+		$parser = new ScriptParser($code);
+		$parser->expression($tree);
+		return $tree;
+	}
+
+	public static function get_fragment($code)
+	{
+		$parser = new ScriptParser($code);
+		$parser->fragment($tree);
+		return $tree;
+	}
+
+	public static function get_variable_ident($code)
+	{
+		$parser = new ScriptParser($code);
+		$parser->variable_ident($tree);
+		return $tree;
+	}
+
 	
 	public function fragment(&$tree)
 	{
@@ -189,27 +212,33 @@ class WitangoParser extends GenericParser
 	// meta_tag = ('<@' | '</@') name {[attr_name '='] ['"'] fragment ['"']} '>'
 	function meta_tag(&$tree)
 	{
-		$closing = false;
-		if ($this->peek('<@') || ($closing = $this->peek('</@'))) {
+        if ($this->peek('</@')) {
+
+            // This should actually be a stand alone bit of grammer.
+            $tag_name = $this->read_ident();
+            $this->whitespace();
+            $this->expect('>');
+            return true;
+
+        } elseif ($this->peek('<@')) {
 			
 			$tag_name = $this->read_ident();
 			
 			if (!strlen($tag_name)) {
 				$this->error('Expected meta tag name');
 			}
-			if ($closing) {
-				$tag_name = '/' . $tag_name;
-			}
 			
-			$tree = new MetaTagNode();
-			$tree->name = $tag_name;
-			$this->info("Tag: " . $tree->name . "\n");
-
-			if (array_key_exists($tag_name, MetaTagNode::$attr_defs)) {
-				$attr_defs = MetaTagNode::$attr_defs[$tag_name];
-			} else {
-				$attr_defs = array();
+            $tree = new BlockMetaTagNode();
+			if (!$tree->handles_tag($tag_name)) {
+				$tree = new MetaTagNode();
+                if (!$tree->handles_tag($tag_name)) {
+                    throw new Exception('Unknown meta tag "' . $tag_name . '"');
+                }
 			}
+
+			$tree->name = $tag_name;
+            $attr_defs = $tree->attr_defs[$tag_name];
+			$this->info("Tag: " . $tree->name . "\n");
 			
 			// Consume any whitespace.
 			$this->whitespace();

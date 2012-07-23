@@ -419,7 +419,7 @@
       <ResultSet Name="events3" Type="Array"/>
     </SearchAction>
     <DirectDBMSAction DSID="loremipsum" DeploymentDSID="" ID="ending2008members" Sig="cust" UseDevelopmentDataSource="TRUE">
-      <Custom><![CDATA[select a2.jurisdiction,sum(a1.endingmembers) from dbo.annual_reports a1, dbo.assemblies a2 where a1.yearending = 2010 and a1.assemblyid = a2.assemblyid group by a2.jurisdiction]]></Custom>
+        <Custom><![CDATA[select a2.jurisdiction,sum(a1.endingmembers) from dbo.annual_reports a1, dbo.assemblies a2 where a1.yearending = @@request$year <@ifequal '1' '2'>and a1.assemblyid = a2.assemblyid</@if> group by a2.jurisdiction]]></Custom>
       <StartRow>1</StartRow>
       <ResultSet Name="ending" Type="Array"/>
     </DirectDBMSAction>
