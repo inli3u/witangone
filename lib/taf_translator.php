@@ -136,4 +136,11 @@ class TafTranslator extends AstVisitor
 		$translator->pop_output();
 		return $before . "$var = ws_query($sql);\n"; 
 	}
+
+    public function visit_SeachActionNode(SearchActionNode $node)
+    {
+        $columns_str = implode(', ', $columns);
+        $tables_str = implode(', ', $tables);
+        $sql = "SELECT $columns_str FROM $tables_str";
+    }
 }

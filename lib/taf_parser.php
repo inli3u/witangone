@@ -155,7 +155,7 @@ class TafParser
 
     function parse_DirectDBMSAction($node, $action)
     {
-		$tree = new DirectDBMSActionNode($node, $action);
+		$tree = new DirectDBMSActionNode();
 		$tree->list['sql'] = ScriptParser::get_fragment((string)$action->Custom);
 		$tree->start_row = (string)$action->StartRow;
 		$tree->result_type = (string)$action->ResultSet['Type'];
@@ -163,11 +163,10 @@ class TafParser
         return $tree;
     }
 
-	/*
     function parse_SearchAction($node, $action)
     {
-        return null;
-
+        $tree - new SerachActionNode();
+        
         $tables = array();
         foreach ($action->Tables->children() as $table) {
             $tables[] = (string)$table;
@@ -179,18 +178,27 @@ class TafParser
         }
 
         $criteria = array();
+        foreach ($action->Criteria->children() as $item) {
+            $critera[] = array(
+                'conjunction' => (string)$item->Conjunction,
+                'table' => (string)$item->Table,
+                'column' => (string)$item->Column,
+                'operation' => (string)$item->Operation,
+                'value' => (string)$item->Value,
+                'quotevalue' => (bool)$item->QuoteValue,
+                'IncludeIfEmpty' => (bool)$item->IncludeIfEmpty
+            );
+        }
 
-        $output = '$' . $action->ResultSet['Name'];
+        $tree->tables = $tables;
+        $tree->columns = $columns;
+        $tree->criteria = $criteria;
 
-        $columns_str = implode(', ', $columns);
-        $tables_str = implode(', ', $tables);
-        $sql = "SELECT $columns_str FROM $tables_str";
 
-        // TODO: needs to support include empty == false.
-
-        return "$output = query(\"$sql\");\n";
+        $tree->output = (string)$action->ResultSet['Name'];
     }
 
+	/*
     function parse_InsertAction($node, $action)
     {
         echo "not implemented: InsertAction\n";
