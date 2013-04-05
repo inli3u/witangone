@@ -55,6 +55,14 @@ class DirectDBMSActionNode extends ActionNode
 	public $result_type;
 }
 
+class SearchActionNode extends ActionNode
+{
+    public $columns = array();
+    public $tables = array();
+    public $criteria = array();
+    public $output = '';
+}
+
 
 
 class ScriptNode extends Node
@@ -211,6 +219,9 @@ class MetaTagNode extends UnaryNode
 		'char' => array(
 			'code' => array('fragment', 0, self::REQUIRED),
 		),
+        'currenttimestamp' => array(
+            // TODO
+        ),
 		'datediff' => array(
 			'date1' => array('fragment', 0, self::REQUIRED),
 			'date2' => array('fragment', 1, self::REQUIRED),
@@ -247,6 +258,9 @@ class MetaTagNode extends UnaryNode
 			'str' => array('fragment', 0, self::REQUIRED),
 			'chars' => array('fragment', 1, self::REQUIRED),
 		),
+        'left' => array(
+            // TODO
+        ),
 		'omit' => array(
 			'str' => array('fragment', 0, self::REQUIRED),
 			'chars' => array('fragment', 1, self::REQUIRED),

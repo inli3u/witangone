@@ -12,13 +12,13 @@ class TafTranslator extends AstVisitor
      * to evaluate the expression first, and return the variable
      * containing the result of the expression as the expression.
      */
-    private function render_expression(ScriptNode $node)
+    private function render_expression(ScriptNode $node, $tempVarName = '_temp')
     {
         $t = new ScriptTranslator();
         if ($node->is_complex()) {
-            $t->push_output(ScriptTranslator::VARIABLE, new VariableIdentNode('_temp'));
+            $t->push_output(ScriptTranslator::VARIABLE, new VariableIdentNode($tempVarName));
             $before = $t->visit($node);
-            $expr = '$_temp';
+            $expr = '$' . $tempVarName;
 			$t->pop_output();
         } else {
             $t->push_output(ScriptTranslator::EXPRESSION);
@@ -132,15 +132,57 @@ class TafTranslator extends AstVisitor
 		$translator = new ScriptTranslator();
 		$translator->push_output(ScriptTranslator::EXPRESSION);
 		$var = $translator->visit($node->list['result_ident']);
-		list($before, $sql) = $this->render_expression($node->list['sql']);
+		list($before, $sql) = $this->render_expression($node->list['sql'], 'sql');
 		$translator->pop_output();
 		return $before . "$var = ws_query($sql);\n"; 
 	}
 
-    public function visit_SeachActionNode(SearchActionNode $node)
+    public function visit_SearchActionNode(SearchActionNode $node)
     {
+        $render_column = function($col) {
+            if (strtolower($col['schema']) == 'dbo') {
+                return $col['table'] . '.' . $col['column'];
+            } else {
+                return $col['schema'] . '.' . $col['table'] . '.' . $col['column'];
+            }
+        };
+
+        $columns = array();
+        foreach ($node->columns as $col) {
+            $columns[] = $render_column($col);
+        }
         $columns_str = implode(', ', $columns);
-        $tables_str = implode(', ', $tables);
+        $tables_str = implode(', ', $node->tables);
+
+        $where = array();
+        foreach ($node->criteria as $item) {
+            switch ($item['operator']) {
+            case 'iseq': $op = '='; break;
+            case 'gthn': $op = '>'; break;
+            case 'lthn': $op = '<'; break;
+            case 'gteq': $op = '>='; break;
+            case 'lteq': $op = '<='; break;
+            case 'isin': $op = 'is in'; break;
+            default: $op = $item['operator'];
+            }
+
+            $translator = new ScriptTranslator();
+            $translator->push_output(ScriptTranslator::EXPRESSION);
+            $value = $translator->visit($item['value']);
+            $translator->pop_output();
+            if ($item['quotevalue']) {
+                $value = "'" . $value . "'";
+            }
+            $where[] = strtoupper(trim($item['conjunction'])) . ' ' . $render_column($item['column']) . ' ' . $op . ' ' . $value;
+        }
+
         $sql = "SELECT $columns_str FROM $tables_str";
+        if (count($where)) {
+            $sql .= ' WHERE ' . implode(' ', $where);
+        };
+
+        $var = '$' . $node->output;
+
+        return "$var = ws_query(\"$sql\");\n";
     }
 }

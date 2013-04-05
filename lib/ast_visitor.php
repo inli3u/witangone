@@ -9,7 +9,8 @@ class AstVisitor
 			//echo "calling $method\n";
 			return call_user_func(array($this, $method), $node);
 		} else {
-			return false;
+            //throw new Exception('Visitor method not found "' . $method . '"');
+            return false;
 		}
 	}
 }

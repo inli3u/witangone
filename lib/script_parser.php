@@ -536,7 +536,9 @@ class ScriptParser extends GenericParser
 	{
 		if ($this->peek('[')) {
 			$tree = new ArrayAccessorNode();
-			$this->number($tree->list[0]);
+
+            // TODO: should this be an expression? check the manual.
+			$this->expression($tree->list[0]);
 			
 			$i = 1;
 			while ($this->peek(',')) {

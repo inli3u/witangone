@@ -63,6 +63,28 @@ class TafParser
         return $tree;
     }
 
+    function get_column_info($table_str, $column_str)
+    {
+        $schema = 'dbo';
+
+        $parts = array_reverse(explode('.', $table_str));
+        $table = $parts[0];
+        if (isset($parts[1])) {
+            $schema = $parts[1];
+        }
+
+        $parts = array_reverse(explode('.', $column_str));
+        $column = $parts[0];
+        if (isset($parts[1])) {
+            $table = $parts[1];
+        }
+        if (isset($parts[2])) {
+            $schema = $parts[2];
+        }
+
+        return array('schema' => $schema, 'table' => $table, 'column' => $column);
+    }
+
     function parse_IfAction($node, $action)
     {
         $tree = new IfActionNode();
@@ -142,9 +164,6 @@ class TafParser
 		return new ReturnActionNode();
     }
 
-
-    // TODO:
-
     function parse_ResultAction($node, $action)
     {
 		$tree = new ResultsActionNode();
@@ -165,7 +184,7 @@ class TafParser
 
     function parse_SearchAction($node, $action)
     {
-        $tree - new SerachActionNode();
+        $tree = new SearchActionNode();
         
         $tables = array();
         foreach ($action->Tables->children() as $table) {
@@ -173,29 +192,28 @@ class TafParser
         }
 
         $columns = array();
-        foreach ($action->SearchColumns->children() as $column) {
-            $columns[] = (string)$column->TableName . '.' . (string)$column->ColumnName;
+        foreach ($action->SearchColumns->children() as $col) {
+            $columns[] = $this->get_column_info((string)$col->TableName, (string)$col->ColumnName);
         }
 
         $criteria = array();
         foreach ($action->Criteria->children() as $item) {
-            $critera[] = array(
+            $value = ScriptParser::get_fragment((string)$item->Value);
+            $criteria[] = array(
                 'conjunction' => (string)$item->Conjunction,
-                'table' => (string)$item->Table,
-                'column' => (string)$item->Column,
-                'operation' => (string)$item->Operation,
-                'value' => (string)$item->Value,
+                'column' => $this->get_column_info((string)$item->TableName, (string)$item->ColumnName),
+                'operator' => (string)$item->Operator,
+                'value' => $value,
                 'quotevalue' => (bool)$item->QuoteValue,
-                'IncludeIfEmpty' => (bool)$item->IncludeIfEmpty
+                'includeifempty' => (bool)$item->IncludeIfEmpty
             );
         }
 
         $tree->tables = $tables;
         $tree->columns = $columns;
         $tree->criteria = $criteria;
-
-
         $tree->output = (string)$action->ResultSet['Name'];
+        return $tree;
     }
 
 	/*

@@ -152,11 +152,6 @@ class ScriptTranslator extends AstVisitor
 
 	public function visit_MetaTagNode(MetaTagNode $node)
 	{
-		// Ignore ending tags.
-		if ('/' === substr($node->name, 0, 1)) {
-			return false;
-		}
-		
 		// First try special case meta tags.
 		$meta_method = 'meta_' . $node->name;
 		if (method_exists($this, $meta_method)) {
