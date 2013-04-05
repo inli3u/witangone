@@ -172,6 +172,7 @@ class ScriptParser extends GenericParser
 			}
 
 			if ($meta_node !== null) {
+                $this->info('TAG: ' . $meta_node->name);
 				if (in_array($meta_node->name, self::$block_end_tags)) {
 					$this->info("found END TAG {$meta_node->name}\n");
 					$more = false;
@@ -213,11 +214,15 @@ class ScriptParser extends GenericParser
 	function meta_tag(&$tree)
 	{
         if ($this->peek('</@')) {
-
             // This should actually be a stand alone bit of grammer.
             $tag_name = $this->read_ident();
+            $this->info('Tag: Peeked start of an end tag "' . $tag_name . '"');
             $this->whitespace();
             $this->expect('>');
+            
+            $tree = new BlockMetaTagNode();
+            $tree->name = '/' . $tag_name;
+            
             return true;
 
         } elseif ($this->peek('<@')) {
@@ -237,7 +242,7 @@ class ScriptParser extends GenericParser
 			}
 
 			$tree->name = $tag_name;
-            $attr_defs = $tree->attr_defs[$tag_name];
+            $attr_defs = $tree->get_attr_defs();
 			$this->info("Tag: " . $tree->name . "\n");
 			
 			// Consume any whitespace.
@@ -271,6 +276,7 @@ class ScriptParser extends GenericParser
 		return false;
 	}
 	
+    // TODO: this is having trouble with the following code <@assign request$var 'text'>
 	function meta_tag_attr(&$tree, $attr_defs, $attr_pos = 0)
 	{
 		if ($this->char === '>') {
@@ -297,7 +303,7 @@ class ScriptParser extends GenericParser
 				}
 			}
 		}
-		
+        
 		if (!strlen($attr_name)) {
 			// Maybe there's no attribute here, haven't even checked for a value yet.
 			$this->error('Unnamed attribute not allowed at this position');
@@ -336,6 +342,7 @@ class ScriptParser extends GenericParser
 		} else {
 			$this->error('Unknown parse function');
 		}
+        
 		//call_user_func(array($this, $parse_func), $a);
 		$tree->list[$attr_name] = $val;
 

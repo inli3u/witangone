@@ -187,151 +187,170 @@ class MetaTagNode extends UnaryNode
 	public $list = array();
 	
 	const REQUIRED = 1;
-	public $attr_defs = array(
-        'addrows' => array(
-            'array' => array('variable_ident', 0, self::REQUIRED),
-            'value' => array('fragment', 1, self::REQUIRED),
-            'position' => array('fragment', 2),
-        ),
-        'appfile' => array(
-        ),
-        'array' => array(
-            'rows' => array('fragment', 0),
-            'cols' => array('fragment', 1),
-            'value' => array('fragment', 2),
-            'cdelim' => array('fragment', 3),
-            'rdelim' => array('fragment', 4),
-        ),
-		'assign' => array(
-			'name' => array('variable_ident', 0, self::REQUIRED),
-			'value' => array('fragment', 1, self::REQUIRED),
-			'scope' => array('fragment'),
-			'expires' => array(),
-			'path' => array(),
-			'domain' => array(),
-			'secure' => array(),
-		),
-		'var' => array(
-			'name' => array('variable_ident', 0, self::REQUIRED),
-		),
-		'arg' => array(
-			'name' => array('fragment', 0, self::REQUIRED),
-		),
-		'char' => array(
-			'code' => array('fragment', 0, self::REQUIRED),
-		),
-        'currenttimestamp' => array(
-            // TODO
-        ),
-		'datediff' => array(
-			'date1' => array('fragment', 0, self::REQUIRED),
-			'date2' => array('fragment', 1, self::REQUIRED),
-		),
-		'lower' => array(
-			'str' => array('fragment', 0, self::REQUIRED),
-		),
-		'postarg' => array(
-			'name' => array('fragment', 0, self::REQUIRED),
-		),
-		'numrows' => array(
-			'array' => array('variable_ident', 0),
-		),
-		'numcols' => array(
-			'array' => array('variable_ident', 0),
-		),
-		'calc' => array(
-			'expr' => array('expression', 0, self::REQUIRED),
-		),
-        'cgi' => array(
-        ),
-		'cgiparam' => array(
-			'name' => array('fragment', 0, self::REQUIRED),
-		),
-		'httpattribute' => array(
-			'name' => array('fragment', 0, self::REQUIRED),
-		),
-		'filter' => array(
-			'array' => array('variable_ident', 0, self::REQUIRED),
-			'expr' => array('expression', 1, self::REQUIRED),
-			'scope' => array('fragment'),
-		),
-		'keep' => array(
-			'str' => array('fragment', 0, self::REQUIRED),
-			'chars' => array('fragment', 1, self::REQUIRED),
-		),
-        'left' => array(
-            // TODO
-        ),
-		'omit' => array(
-			'str' => array('fragment', 0, self::REQUIRED),
-			'chars' => array('fragment', 1, self::REQUIRED),
-		),
-		'random' => array(
-			'high' => array('fragment', 0),
-			'low' => array('fragment', 1),
-		),
-		'searcharg' => array(
-			'name' => array('fragment', 0, self::REQUIRED),
-		),
-		'sort' => array(
-			'array' => array('variable_ident', 0, self::REQUIRED),
-			'cols' => array('fragment'),
-			'scope' => array('fragment'),
-		),
-        'substring' => array(
-            'str' => array('fragment', 0, self::REQUIRED),
-            'start' => array('fragment', 1, self::REQUIRED),
-            'numchars' => array('fragment', 2, self::REQUIRED),
-        ),
-        'varinfo' => array(
-            'name' => array('variable_ident', 0, self::REQUIRED),
-            'attribute' => array('fragment', 1),
-        ),
-	);
+    
+    public function get_attr_defs($name = null)
+    {
+        $attr_defs = array(
+            'addrows' => array(
+                'array' => array('variable_ident', 0, self::REQUIRED),
+                'value' => array('fragment', 1, self::REQUIRED),
+                'position' => array('fragment', 2),
+            ),
+            'appfile' => array(
+            ),
+            'array' => array(
+                'rows' => array('fragment', 0),
+                'cols' => array('fragment', 1),
+                'value' => array('fragment', 2),
+                'cdelim' => array('fragment', 3),
+                'rdelim' => array('fragment', 4),
+            ),
+            'assign' => array(
+                'name' => array('variable_ident', 0, self::REQUIRED),
+                'value' => array('fragment', 1, self::REQUIRED),
+                'scope' => array('fragment'),
+                'expires' => array(),
+                'path' => array(),
+                'domain' => array(),
+                'secure' => array(),
+            ),
+            'var' => array(
+                'name' => array('variable_ident', 0, self::REQUIRED),
+            ),
+            'arg' => array(
+                'name' => array('fragment', 0, self::REQUIRED),
+            ),
+            'char' => array(
+                'code' => array('fragment', 0, self::REQUIRED),
+            ),
+            'currentdate' => array(
+                'format' => array('fragment', 0),
+            ),
+            'currenttime' => array(
+                'format' => array('fragment', 0),
+            ),
+            'currenttimestamp' => array(
+                'format' => array('fragment', 0),
+            ),
+            'datediff' => array(
+                'date1' => array('fragment', 0, self::REQUIRED),
+                'date2' => array('fragment', 1, self::REQUIRED),
+            ),
+            'lower' => array(
+                'str' => array('fragment', 0, self::REQUIRED),
+            ),
+            'postarg' => array(
+                'name' => array('fragment', 0, self::REQUIRED),
+            ),
+            'numrows' => array(
+                'array' => array('variable_ident', 0),
+            ),
+            'numcols' => array(
+                'array' => array('variable_ident', 0),
+            ),
+            'calc' => array(
+                'expr' => array('expression', 0, self::REQUIRED),
+            ),
+            'cgi' => array(
+            ),
+            'cgiparam' => array(
+                'name' => array('fragment', 0, self::REQUIRED),
+            ),
+            'httpattribute' => array(
+                'name' => array('fragment', 0, self::REQUIRED),
+            ),
+            'filter' => array(
+                'array' => array('variable_ident', 0, self::REQUIRED),
+                'expr' => array('expression', 1, self::REQUIRED),
+                'scope' => array('fragment'),
+            ),
+            'keep' => array(
+                'str' => array('fragment', 0, self::REQUIRED),
+                'chars' => array('fragment', 1, self::REQUIRED),
+            ),
+            'left' => array(
+                'str' => array('fragment', 0, self::REQUIRED),
+                'numchars' => array('fragment', 1, self::REQUIRED),
+            ),
+            'omit' => array(
+                'str' => array('fragment', 0, self::REQUIRED),
+                'chars' => array('fragment', 1, self::REQUIRED),
+            ),
+            'random' => array(
+                'high' => array('fragment', 0),
+                'low' => array('fragment', 1),
+            ),
+            'searcharg' => array(
+                'name' => array('fragment', 0, self::REQUIRED),
+            ),
+            'sort' => array(
+                'array' => array('variable_ident', 0, self::REQUIRED),
+                'cols' => array('fragment'),
+                'scope' => array('fragment'),
+            ),
+            'substring' => array(
+                'str' => array('fragment', 0, self::REQUIRED),
+                'start' => array('fragment', 1, self::REQUIRED),
+                'numchars' => array('fragment', 2, self::REQUIRED),
+            ),
+            'varinfo' => array(
+                'name' => array('variable_ident', 0, self::REQUIRED),
+                'attribute' => array('fragment', 1),
+            ),
+        );
+        
+        return @$attr_defs[$name !== null ? $name : $this->name];
+    }
 
 	public function handles_tag($tag_name)
 	{
-		return array_key_exists($tag_name, $this->attr_defs);
+		return $this->get_attr_defs($tag_name) !== null;
 	}
 	
 }
 
 class BlockMetaTagNode extends MetaTagNode
 {
-	public $attr_defs = array(
-        'debug' => array(
-        ),
-		'if' => array(
-			'expr' => array('expression', 0, self::REQUIRED),
-			'true' => array('fragment', 1),
-			'false' => array('fragment', 2),
-		),
-		'ifequal' => array(
-			'value1' => array('fragment', 0, self::REQUIRED),
-			'value2' => array('fragment', 1, self::REQUIRED),
-		),
-        'ifempty' => array(
-            'value' => array('fragment', 0, self::REQUIRED),
-        ),
-        'ifnotempty' => array(
-            'value' => array('fragment', 0, self::REQUIRED),
-        ),
-		'elseif' => array(
-			'expr' => array('expression', 0, self::REQUIRED),
-		),
-		'elseifempty' => array(
-			'value' => array('fragment', 0, self::REQUIRED),
-		),
-		'elseifnotempty' => array(
-			'value' => array('fragment', 0, self::REQUIRED),
-		),
-		'elseifequal' => array(
-			'value1' => array('fragment', 0, self::REQUIRED),
-			'value2' => array('fragment', 1, self::REQUIRED),
-		),
-        'else' => array(
-        ),
-	);
+	public function get_attr_defs($name = null)
+    {
+        $attr_defs = array(
+            'debug' => array(
+            ),
+            'if' => array(
+                'expr' => array('expression', 0, self::REQUIRED),
+                'true' => array('fragment', 1),
+                'false' => array('fragment', 2),
+            ),
+            'ifequal' => array(
+                'value1' => array('fragment', 0, self::REQUIRED),
+                'value2' => array('fragment', 1, self::REQUIRED),
+            ),
+            'ifempty' => array(
+                'value' => array('fragment', 0, self::REQUIRED),
+            ),
+            'ifnotempty' => array(
+                'value' => array('fragment', 0, self::REQUIRED),
+            ),
+            'elseif' => array(
+                'expr' => array('expression', 0, self::REQUIRED),
+            ),
+            'elseifempty' => array(
+                'value' => array('fragment', 0, self::REQUIRED),
+            ),
+            'elseifnotempty' => array(
+                'value' => array('fragment', 0, self::REQUIRED),
+            ),
+            'elseifequal' => array(
+                'value1' => array('fragment', 0, self::REQUIRED),
+                'value2' => array('fragment', 1, self::REQUIRED),
+            ),
+            'else' => array(
+            ),
+        );
+        
+        return @$attr_defs[$name !== null ? $name : $this->name];
+    }
+        
 
     public function is_complex()
     {

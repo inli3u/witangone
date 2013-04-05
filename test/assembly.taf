@@ -226,7 +226,7 @@
           <TableName/>
           <ColumnName>assemblies.assemblyidnum</ColumnName>
           <Operator>iseq</Operator>
-          <Value><![CDATA[@@user$assembly]]></Value>
+          <Value><![CDATA[<@if '1=2'>@@user$assembly<@else>-1</@if>]]></Value>
           <QuoteValue>true</QuoteValue>
           <IncludeIfEmpty>false</IncludeIfEmpty>
         </CriteriaItem>

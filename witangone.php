@@ -31,7 +31,7 @@ class Witangone
 
 	public function translate_script($code, $flags = array())
 	{
-		$parser = new WitangoParser($code);
+		$parser = new ScriptParser($code);
 		$parser->fragment($tree);
 		$tree->statement = true;
 
@@ -41,7 +41,7 @@ class Witangone
 			return print_r($tree);
 		} else {
             $translator = new ScriptTranslator();
-			return $this->prettify($translator->visit($tree));
+			return "<?php\n\n" . $this->prettify($translator->visit($tree));
 		}
 	}
 	

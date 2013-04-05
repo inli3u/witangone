@@ -192,3 +192,10 @@ class TafTranslator extends AstVisitor
         return "$var = ws_query(\"$sql\");\n";
     }
 }
+
+//ws_query()
+//    ->select()
+//    ->from()
+//    ->join()
+//    ->left_join()
+//    ->where()

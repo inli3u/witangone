@@ -23,50 +23,69 @@
  * %Y year with century
  * %% % sign 
  */
-function _ws_convert_date_format($format, $time = null)
+function _ws_date_part($format, $time)
 {
+    switch ($format) {
+        case 'a': return date('D', $time); //  abbreviated weekday name 
+        case 'A': return date('l', $time); //  full weekday name
+        case 'b': return date('M', $time); //  abbreviated month name
+        case 'B': return date('F', $time); //  full month name 
+        case 'c': throw new Exception('Date format not supported: ' . $format); //  local date and time representation
+        case 'd': return date('d', $time); //  day of month (01–31) 
+        case 'H': return date('G', $time); //  hour (24 hour clock) 
+        case 'I': return date('g', $time); //  hour (12 hour clock)
+        case 'j': return date('z', $time) + 1; //  day of the year (001–366) 
+        case 'm': return date('m', $time); //  month (01–12) 
+        case 'M': return date('i', $time); //  minute (00–59) 
+        case 'p': return date('A', $time); //  local equivalent of AM or PM 
+        case 'S': return date('s', $time); //  second (00–59) 
+        case 'U': throw new Exception('Date format not supported: ' . $format); //  week number of the year (Sunday= first day of week) (00–53) 
+        case 'w': return date('w', $time); //  weekday (0–6, Sunday is zero) 
+        case 'W': return date('W', $time) - 1; //  week number of the year (Monday = first day of week) (00–53) 
+        case 'x': throw new Exception('Date format not supported: ' . $format); //  local date representation 
+        case 'X': throw new Exception('Date format not supported: ' . $format); //  local time representation
+        case 'y': return date('y', $time); //  year without century (00–99)
+        case 'Y': return date('Y', $time); //  year with century
+        case '%': return '%'; //  % sign 
+    }
+}
+
+function _ws_date($format, $time = null) {
     if ($time === null) {
         $time = time();
     }
-
-    switch ($format) {
-        case '%a': return date('D', $time); //  abbreviated weekday name 
-        case '%A': return date('l', $time); //  full weekday name
-        case '%b': return date('M', $time); //  abbreviated month name
-        case '%B': return date('F', $time); //  full month name 
-        case '%c': throw new Exception('Date format not supported: ' . $format); //  local date and time representation
-        case '%d': return date('d', $time); //  day of month (01–31) 
-        case '%H': return date('G', $time); //  hour (24 hour clock) 
-        case '%I': return date('g', $time); //  hour (12 hour clock)
-        case '%j': return date('z', $time) + 1; //  day of the year (001–366) 
-        case '%m': return date('m', $time); //  month (01–12) 
-        case '%M': return date('i', $time); //  minute (00–59) 
-        case '%p': return date('A', $time); //  local equivalent of AM or PM 
-        case '%S': return date('s', $time); //  second (00–59) 
-        case '%U': return date('W', $time) - 1; //  week number of the year (Sunday= first day of week) (00–53) 
-        case '%w': return date('w', $time); //  weekday (0–6, Sunday is zero) 
-        case '%W': return date('W', $time) - 1; //  week number of the year (Monday = first day of week) (00–53) 
-        case '%x': throw new Exception('Date format not supported: ' . $format); //  local date representation 
-        case '%X': throw new Exception('Date format not supported: ' . $format); //  local time representation
-        case '%y': return date('y', $time); //  year without century (00–99)
-        case '%Y': return date('Y', $time); //  year with century
-        case '%%': return '%'; //  % sign 
+    
+    $i = 0;
+    $formatted = '';
+    while ($i < strlen($format)) {
+        $char = $format[$i];
+        if ($char == '%') {
+            $i++;
+            $formatted .= _ws_date_part($format[$i], $time);
+        } else {
+            $formatted .= $char;
+        }
+        $i++;
     }
+    
+    return $formatted;
 }
 
-function ws_currentdate($format)
+
+
+function ws_currentdate($format = null)
 {
-    ws_config('dateFormat');
+    return _ws_date(($format !== null) ? $format : ws_config('dateFormat'));
 }
 
-function ws_currenttime($format)
+function ws_currenttime($format = null)
 {
-    ws_config('timeFormat');
+    return _ws_date(($format !== null) ? $format : ws_config('timeFormat'));
 }
 
-function ws_currenttimestamp($format)
+function ws_currenttimestamp($format = null)
 {
-    ws_config('timestampFormat');
+    return _ws_date(($format !== null) ? $format : ws_config('timestampFormat'));
 }
 
 /**
@@ -418,7 +437,7 @@ function ws_numrows($array = null)
 {
     if ($array === null) {
         throw new Exception('ws_numrows: Implicit array not supported yet');
-    elseif (is_array($array)) {
+    } elseif (is_array($array)) {
         return count($array);
     } else {
         return 0;
@@ -443,7 +462,7 @@ function ws_numcols($array = array())
 {
     if ($array === null) {
         throw new Exception('ws_numrows: Implicit array not supported yet');
-    elseif (is_array($array)) {
+    } elseif (is_array($array)) {
         return @count($array[0]);
     } else {
         return 0;
@@ -542,3 +561,5 @@ function ws_varinfo($var, $attribute)
 ws_config('dateFormat', '%m/%d/%Y');
 ws_config('timeFormat', '%H:%M:%S');
 ws_config('timestampFormat', '%m/%d/%Y %H:%M:%S');
+
+date_default_timezone_set('America/Detroit');

@@ -26,7 +26,7 @@ class ScriptTranslator extends AstVisitor
 		array_pop($this->target);
 	}
 
-	public function visit(ScriptNode $node, $flags = 0)
+	public function visit(ScriptNode $node, $flags = null)
 	{
 		// The stack of consumed states is maintained in this recursive call stack.
 		$last_consumed = $this->is_consumed;
@@ -85,7 +85,7 @@ class ScriptTranslator extends AstVisitor
 			//}
 
 			if ($this->is_expression($n)) {
-				if (!$this->is_consumed && $target_type !== self::EXPRESSION) {
+				if (!$this->is_consumed() && $target_type !== self::EXPRESSION) {
 					if ($target_type === self::VARIABLE) {
 						$target_str = $this->make_variable($target_ident);
 						if ($target_hits === 0) {
@@ -102,8 +102,6 @@ class ScriptTranslator extends AstVisitor
 				}
 				$result = $target_str . $result;
 				$result .= $this->is_consumed() || $target_type === self::EXPRESSION ? '' : ";\n";
-			} elseif ($this->is_statement($n)) {
-				$result .= $this->is_consumed() || $target_type === self::EXPRESSION ? '' : ";\n";
 			} elseif ($this->is_control($n)) {
 				// Do nothing.
 			} else {
@@ -112,7 +110,7 @@ class ScriptTranslator extends AstVisitor
 
 			$code[] = $result;
 		}
-		if ($this->is_consumed || $target_type === self::EXPRESSION) {
+		if ($this->is_consumed() || $target_type === self::EXPRESSION) {
 			// concat ' . '
 			// 
 			return implode(' . ', $code);
@@ -196,6 +194,18 @@ class ScriptTranslator extends AstVisitor
 				$name = 'chr';
 				$args[] = $list['code'];
 				break;
+            case 'currentdate':
+				$name = 'ws_currentdate';
+				$args[] = strlen(@$list['format']) ? $list['format'] : null;
+				break;
+            case 'currenttime':
+				$name = 'ws_currenttime';
+				$args[] = strlen(@$list['format']) ? $list['format'] : null;
+				break;
+            case 'currenttimestamp':
+				$name = 'ws_currenttimestamp';
+				$args[] = strlen(@$list['format']) ? $list['format'] : null;
+				break;
 			case 'datediff':
 				$name = 'ws_datediff';
 				$args = array($list['date1'], $list['date2']);
@@ -208,6 +218,12 @@ class ScriptTranslator extends AstVisitor
 				$name = 'ws_keep';
 				$args[] = $list['str'];
 				$args[] = $list['chars'];
+				break;
+			case 'left':
+				$name = 'substr';
+				$args[] = $list['str'];
+                $args[] = 0;
+				$args[] = $list['numchars'];
 				break;
 			case 'lower':
 				$name = 'strtolower';
@@ -297,7 +313,7 @@ class ScriptTranslator extends AstVisitor
 	public function meta_else($node)
 	{
 		$block = $this->visit($node->child);
-		return "else {\n$block}\n";
+		return "else\n{\n$block}\n";
 	}
 
     public function meta_debug($node)
