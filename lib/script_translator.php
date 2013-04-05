@@ -4,6 +4,56 @@ require_once('nodes.php');
 require_once('ast_visitor.php');
 
 
+class OutputTarget
+{
+    const EXPRESSION = 1;
+	const STDOUT = 2;
+	const VARIABLE = 3;
+    
+    public $type = null;
+    public $hits = 0;
+    public $variable_ident = null;
+    
+    
+    public static function StdOut()
+    {
+        $target = new OutputTarget();
+        $target->type = self::STDOUT;
+        return $target;
+    }
+    
+    public static function Expression()
+    {
+        $target = new OutputTarget();
+        $target->type = self::EXPRESSION;
+        return $target;
+    }
+    
+    public static function Variable($variable_ident)
+    {
+        $target = new OutputTarget();
+        $target->type = self::VARIABLE;
+        $target->variable_name = $variable_ident;
+        return $target;
+    }
+    
+    public function is_stdout()
+    {
+        return $this->type === self::VARIABLE;
+    }
+    
+    public function is_expression()
+    {
+        return $this->type === self::VARIABLE;
+    }
+    
+    public function is_variable()
+    {
+        return $this->type === self::VARIABLE;
+    }
+}
+
+
 class ScriptTranslator extends AstVisitor
 {
 	const CONSUMED = 1;
@@ -16,40 +66,42 @@ class ScriptTranslator extends AstVisitor
 	private $target = array();
 
 
-	public function push_output($type, $ident = null)
+	public function push_target(OutputTarget $target)
 	{
-		array_push($this->target, array($type, $ident, 0));
+		array_push($this->target, $target);
 	}
 
-	public function pop_output()
+	public function pop_target()
 	{
 		array_pop($this->target);
 	}
+    
+    public function get_target()
+    {
+        $count = count($this->target);
+        if ($count) {
+            return $this->target[$count - 1];
+        }
+    }
 
-	public function visit(ScriptNode $node, $flags = null)
+	public function visit(ScriptNode $node, $target = null)
 	{
-		// The stack of consumed states is maintained in this recursive call stack.
-		$last_consumed = $this->is_consumed;
-		if ($flags === self::CONSUMED) {
-			$this->is_consumed = true;
-		}
+		if ($target !== null) {
+            $this->push_target($target);
+        }
 		
 		$result = parent::visit($node);
 
-		$this->is_consumed = $last_consumed;
+		if ($target !== null) {
+            $this->pop_target($target);
+        }
 		
 		return $result;
 	}
 
 	public function is_expression($node)
 	{
-		return !$this->is_statement($node) && !$this->is_control($node);
-	}
-
-	public function is_statement($node)
-	{
-		return false;
-		//return $node instanceof MetaTagNode && in_array($node->name, array('assign'));
+		return !$this->is_control($node);
 	}
 
 	public function is_control($node)
@@ -61,15 +113,15 @@ class ScriptTranslator extends AstVisitor
 	
 	public function is_consumed()
 	{
-		return $this->is_consumed;
+        $target = $this->get_target();
+		return $target->is_expression();
 	}
 
 	public function visit_FragmentNode(FragmentNode $node)
 	{
 		$code = array();
 		
-		$target_index = count($this->target) - 1;
-		list($target_type, $target_ident, $target_hits) = @$this->target[$target_index];
+        $target = $this->get_target();
 		$target_str = '';
 				
 		foreach ($node->list as $n) {
@@ -85,23 +137,22 @@ class ScriptTranslator extends AstVisitor
 			//}
 
 			if ($this->is_expression($n)) {
-				if (!$this->is_consumed() && $target_type !== self::EXPRESSION) {
-					if ($target_type === self::VARIABLE) {
-						$target_str = $this->make_variable($target_ident);
-						if ($target_hits === 0) {
+				if (!$target->is_expression()) {
+					if ($target->is_variable()) {
+						$target_str = $this->make_variable($target->variable_ident);
+						if ($target->hits === 0) {
 							$target_str .= ' = ';
 						} else {
 							$target_str .= ' .= ';
 						}
 						// Update hits.
-						$target_hits++;
-						$this->target[$target_index][2]++;
+						$target->hits++;
 					} else {
 						$target_str = 'echo ';
 					}
 				}
 				$result = $target_str . $result;
-				$result .= $this->is_consumed() || $target_type === self::EXPRESSION ? '' : ";\n";
+				$result .= $this->is_consumed() || $target->is_expression() ? '' : ";\n";
 			} elseif ($this->is_control($n)) {
 				// Do nothing.
 			} else {
@@ -110,7 +161,7 @@ class ScriptTranslator extends AstVisitor
 
 			$code[] = $result;
 		}
-		if ($this->is_consumed() || $target_type === self::EXPRESSION) {
+		if ($target->is_expression()) {
 			// concat ' . '
 			// 
 			return implode(' . ', $code);
@@ -159,7 +210,7 @@ class ScriptTranslator extends AstVisitor
 		// Then try a lib function.
 		$list = array();
 		foreach ($node->list as $arg_name => $arg) {
-			$list[$arg_name] = $this->visit($arg, self::CONSUMED);
+			$list[$arg_name] = $this->visit($arg, OutputTarget::Expression());
 		}
 		
 		$args = array();
@@ -276,36 +327,36 @@ class ScriptTranslator extends AstVisitor
 	
 	public function meta_if($node)
 	{
-		$expr = $this->visit($node->list['expr'], self::CONSUMED);
+		$expr = $this->visit($node->list['expr'], OutputTarget::Expression());
 		$block = $this->visit($node->child);
 		return "if ($expr)\n{\n$block}\n";
 	}
 	
 	public function meta_ifequal($node)
 	{
-		$left = $this->visit($node->list['value1'], self::CONSUMED);
-		$right = $this->visit($node->list['value2'], self::CONSUMED);
+		$left = $this->visit($node->list['value1'], OutputTarget::Expression());
+		$right = $this->visit($node->list['value2'], OutputTarget::Expression());
 		$block = $this->visit($node->child);
 		return "if ($left == $right)\n{\n$block}\n";
 	}
 
     public function meta_ifempty($node)
     {
-        $value = $this->visit($node->list['value'], self::CONSUMED);
+        $value = $this->visit($node->list['value'], OutputTarget::Expression());
 		$block = $this->visit($node->child);
 		return "if ($value == null)\n{\n$block}\n";
     }
 
     public function meta_ifnotempty($node)
     {
-        $value = $this->visit($node->list['value'], self::CONSUMED);
+        $value = $this->visit($node->list['value'], OutputTarget::Expression());
 		$block = $this->visit($node->child);
 		return "if ($value != null)\n{\n$block}\n";
     }
 	
 	public function meta_elseif($node)
 	{
-		$expr = $this->visit($node->list['expr'], self::CONSUMED);
+		$expr = $this->visit($node->list['expr'], OutputTarget::Expression());
 		$block = $this->visit($node->child);
 		return "elseif ($expr)\n{\n$block}\n";
 	}
@@ -376,9 +427,9 @@ class ScriptTranslator extends AstVisitor
 		if (!strlen($ident->scope)) {
 			$ident->scope = @$node->list['scope']->list[0]->value;
 		}
-		$this->push_output(self::VARIABLE, $ident);
-		$result = $this->visit($node->list['value']);
-		$this->pop_output();
+		//$this->push_output(self::VARIABLE, $ident);
+		$result = $this->visit($node->list['value'], OutputTarget::Variable($ident));
+		//$this->pop_output();
 		return $result;
 	}
 
@@ -397,7 +448,7 @@ class ScriptTranslator extends AstVisitor
 		$func = 'strlen';
 		switch ($node->name) {
 			case 'len':
-				return 'strlen(' . $this->visit($node->child, self::CONSUMED) . ')';
+				return 'strlen(' . $this->visit($node->child, OutputTarget::Expression()) . ')';
 			default:
 				throw new Expection('Unknown expression function "' . $node->name . '"');
 		}
@@ -412,7 +463,7 @@ class ScriptTranslator extends AstVisitor
 	{
 		$n = new FragmentNode();
 		$n->list = $node->list;
-		return $this->visit($n, self::CONSUMED);
+		return $this->visit($n, OutputTarget::Expression());
 	}
 
     public function visit_FilterVariableNode(FilterVariableNode $node)
