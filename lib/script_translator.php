@@ -56,13 +56,6 @@ class OutputTarget
 
 class ScriptTranslator extends AstVisitor
 {
-	const CONSUMED = 1;
-	const EXPRESSION = 1;
-	const STDOUT = 2;
-	const VARIABLE = 3;
-	private $is_consumed = false;
-	private $depth = 0;
-	private $indent_level = 0;
 	private $target = array();
 
 
@@ -99,29 +92,13 @@ class ScriptTranslator extends AstVisitor
 		return $result;
 	}
 
-	public function is_expression($node)
-	{
-		return !$this->is_control($node);
-	}
-
-	public function is_control($node)
-	{
-		return $node instanceof MetaTagNode && in_array($node->name, array('assign', 'if', 'ifequal', 'ifempty', 'ifnotempty', 'elseif', 'else'));
-	}
-	
-	public function is_consumed()
-	{
-        $target = $this->get_target();
-		return $target->is_expression();
-	}
-
 	public function visit_FragmentNode(FragmentNode $node)
 	{
 		$code = array();
 		
         $target = $this->get_target();
 		$target_str = '';
-				
+		
 		foreach ($node->list as $n) {
 			$result = $this->visit($n);
 			if ($result === false) {
@@ -134,34 +111,25 @@ class ScriptTranslator extends AstVisitor
 			//	$result = '(' . $result . ')';
 			//}
 
-			if ($this->is_expression($n)) {
-				if (!$target->is_expression()) {
-					if ($target->is_variable()) {
-						$target_str = $this->make_variable($target->variable_ident);
-						if ($target->hits === 0) {
-							$target_str .= ' = ';
-						} else {
-							$target_str .= ' .= ';
-						}
-						// Update hits.
-						$target->hits++;
-					} else {
-						$target_str = 'echo ';
-					}
-				}
-				$result = $target_str . $result;
-				$result .= $this->is_consumed() || $target->is_expression() ? '' : ";\n";
-			} elseif ($this->is_control($n)) {
-				// Do nothing.
-			} else {
-				throw new Exception('Unknown statement type');
+			if (!$n->is_complex()) {
+
+                if ($target->is_variable()) {
+                    $variable = $this->make_variable($target->variable_ident);
+                    if ($target->hits === 0) {
+                        $result = "$variable = $result;\n";
+                    } else {
+                        $result = "$variable .= $result;\n";
+                    }
+                    $target->hits++;
+                } elseif ($target->is_stdout()) {
+                    $result = "echo $result;\n";
+                }
 			}
 
 			$code[] = $result;
 		}
+        
 		if ($target->is_expression()) {
-			// concat ' . '
-			// 
 			return implode(' . ', $code);
 		} else {
 			return implode('', $code);

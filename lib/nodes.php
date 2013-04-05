@@ -307,6 +307,10 @@ class MetaTagNode extends UnaryNode
 		return $this->get_attr_defs($tag_name) !== null;
 	}
 	
+    public function is_complex()
+    {
+        return $this->name === 'assign';
+    }
 }
 
 class BlockMetaTagNode extends MetaTagNode
@@ -354,7 +358,7 @@ class BlockMetaTagNode extends MetaTagNode
 
     public function is_complex()
     {
-        return true;
+        return $this->name !== 'debug';
     }
 }
 
