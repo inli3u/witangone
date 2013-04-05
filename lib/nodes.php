@@ -2,6 +2,7 @@
 
 class Node
 {
+    public $comment = '';
 }
 
 class ActionNode extends Node

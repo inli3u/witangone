@@ -7,8 +7,8 @@ require_once('script_parser.php');
 class TafParser
 {
     private $xml;
-    private $skipped = 0;
-    private $skip_list = '';
+
+
 
     public function __construct($code)
     {
@@ -19,16 +19,12 @@ class TafParser
     {
         $tree = $this->parse_list($this->xml->Program->children());
 
-        if (strlen($this->skip_list)) {
-            echo "Skipped:\n{$this->skip_list}\n";
-        }
-
 		return $tree;
     }
 
 
 
-    function get_node($id)
+    function get_xml_element($id)
     {
         $list = $this->xml->xpath("//*[@ID='$id']");
         if (!count($list)) {
@@ -42,21 +38,21 @@ class TafParser
      * calls the appropriate function to handle the action, and adds the
      * resulting AST to the list.
      */
-    function parse_list($node_list)
+    function parse_list($action_ref_list)
     {
         $src = '';
         $tree = new ActionNodeList();
         
-        foreach ($node_list as $node) {
-            $action = $this->get_node((string)$node['Ref']);
+        foreach ($action_ref_list as $action_ref) {
+            $action = $this->get_xml_element((string)$action_ref['Ref']);
             
-            //echo "Encountered '" . $action->getName() . "'\n";
             $method = 'parse_' . $action->getName();
             if (method_exists($this, $method)) {
-                $tree->list[] = $this->{$method}($node, $action);
+                $node = $this->{$method}($action_ref, $action);
+                $node->comment = 'Action: ' . (string)$action['ID'];
+                $tree->list[] = $node;
             } else {
-                $this->skipped++;
-                $this->skip_list .= $action->getName() . "\n";
+                echo 'Unknown action: ' . $action->getName() . "\n";
             }
         }
 
@@ -85,7 +81,7 @@ class TafParser
         return array('schema' => $schema, 'table' => $table, 'column' => $column);
     }
 
-    function parse_IfAction($node, $action)
+    function parse_IfAction($action_ref, $action)
     {
         $tree = new IfActionNode();
 
@@ -95,11 +91,11 @@ class TafParser
 		}
 
         $tree->list['expr'] = ScriptParser::get_expression($expr);
-        $tree->list['block'] = $this->parse_list($node->children());
+        $tree->list['block'] = $this->parse_list($action_ref->children());
         return $tree;
     }
 
-    function parse_ElseIfAction($node, $action)
+    function parse_ElseIfAction($action_ref, $action)
     {
         $tree = new ElseIfActionNode();
 
@@ -109,30 +105,30 @@ class TafParser
 		}
 
         $tree->list['expr'] = ScriptParser::get_expression($expr);
-        $tree->list['block'] = $this->parse_list($node->children());
+        $tree->list['block'] = $this->parse_list($action_ref->children());
         return $tree;
     }
 
-    function parse_ElseAction($node, $action)
+    function parse_ElseAction($action_ref, $action)
     {
         $tree = new ElseActionNode();
-        $tree->list['block'] = $this->parse_list($node->children());
+        $tree->list['block'] = $this->parse_list($action_ref->children());
         return $tree;
     }
 
-    function parse_ForAction($node, $action)
+    function parse_ForAction($action_ref, $action)
     {
 		$tree = new ForActionNode();
         $tree->variable = $action->LoopVariable;
         $tree->start = (string)$action->Start;
 		$tree->increment = (string)$action->Increment;
         $tree->list['stop'] = ScriptParser::get_fragment((string)$action->Stop);
-		$tree->list['block'] = $this->parse_list($node->children());
+		$tree->list['block'] = $this->parse_list($action_ref->children());
         
 		return $tree;
     }
 
-    function parse_AssignAction($node, $action)
+    function parse_AssignAction($action_ref, $action)
     {
 		// TODO: support script in variable names.
 		$tree = new AssignActionNode();
@@ -144,7 +140,7 @@ class TafParser
 		return $tree;
     }
 
-    function parse_PresentationAction($node, $action)
+    function parse_PresentationAction($action_ref, $action)
     {
 		$tree = new PresentationActionNode();
 
@@ -159,20 +155,20 @@ class TafParser
 		return $tree;
     }
 
-    function parse_ReturnAction($node, $action)
+    function parse_ReturnAction($action_ref, $action)
     {
 		return new ReturnActionNode();
     }
 
-    function parse_ResultAction($node, $action)
+    function parse_ResultAction($action_ref, $action)
     {
 		$tree = new ResultsActionNode();
-        $output = (string)$this->get_node((string)$action->ResultsOutput['Ref']);
+        $output = (string)$this->get_xml_element((string)$action->ResultsOutput['Ref']);
         $tree->list['script'] = ScriptParser::get_fragment($output);
 		return $tree;
     }
 
-    function parse_DirectDBMSAction($node, $action)
+    function parse_DirectDBMSAction($action_ref, $action)
     {
 		$tree = new DirectDBMSActionNode();
 		$tree->list['sql'] = ScriptParser::get_fragment((string)$action->Custom);
@@ -182,7 +178,7 @@ class TafParser
         return $tree;
     }
 
-    function parse_SearchAction($node, $action)
+    function parse_SearchAction($action_ref, $action)
     {
         $tree = new SearchActionNode();
         
@@ -217,25 +213,25 @@ class TafParser
     }
 
 	/*
-    function parse_InsertAction($node, $action)
+    function parse_InsertAction($action_ref, $action)
     {
         echo "not implemented: InsertAction\n";
         return "// SQL Insert.\n";
     }
 
-    function parse_UpdateAction($node, $action)
+    function parse_UpdateAction($action_ref, $action)
     {
         echo "not implemented: UpdateAction\n";
         return "// SQL Update.\n";
     }
 
-    function parse_DeleteAction($node, $action)
+    function parse_DeleteAction($action_ref, $action)
     {
         echo "not implemented: DeleteAction\n";
         return "// SQL Delete.\n";
     }
 
-    function parse_MailAction($node, $action)
+    function parse_MailAction($action_ref, $action)
     {
         echo "not implemented: MailAction\n";
         return "// Mail Action.\n";

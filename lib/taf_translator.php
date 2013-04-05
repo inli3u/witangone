@@ -32,7 +32,13 @@ class TafTranslator extends AstVisitor
 
     public function visit(ActionNode $node)
     {
-        return parent::visit($node);
+        $src = '';
+        if (strlen($node->comment)) {
+            $src .= '// ' . $node->comment . "\n";
+        }
+        $src .= parent::visit($node);
+        $src .= "\n";
+        return $src;
     }
 
     public function visit_ActionNodeList(ActionNodeList $node)

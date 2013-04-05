@@ -1,6 +1,75 @@
 <?php
 
 /**
+ * %a abbreviated weekday name 
+ * %A full weekday name
+ * %b abbreviated month name
+ * %B full month name 
+ * %c local date and time representation
+ * %d day of month (01–31) 
+ * %H hour (24 hour clock) 
+ * %I hour (12 hour clock)
+ * %j day of the year (001–366) 
+ * %m month (01–12) 
+ * %M minute (00–59) 
+ * %p local equivalent of AM or PM 
+ * %S second (00–59) 
+ * %U week number of the year (Sunday= first day of week) (00–53) 
+ * %w weekday (0–6, Sunday is zero) 
+ * %W week number of the year (Monday = first day of week) (00–53) 
+ * %x local date representation 
+ * %X local time representation
+ * %y year without century (00–99)
+ * %Y year with century
+ * %% % sign 
+ */
+function _ws_convert_date_format($format, $time = null)
+{
+    if ($time === null) {
+        $time = time();
+    }
+
+    switch ($format) {
+        case '%a': return date('D', $time); //  abbreviated weekday name 
+        case '%A': return date('l', $time); //  full weekday name
+        case '%b': return date('M', $time); //  abbreviated month name
+        case '%B': return date('F', $time); //  full month name 
+        case '%c': throw new Exception('Date format not supported: ' . $format); //  local date and time representation
+        case '%d': return date('d', $time); //  day of month (01–31) 
+        case '%H': return date('G', $time); //  hour (24 hour clock) 
+        case '%I': return date('g', $time); //  hour (12 hour clock)
+        case '%j': return date('z', $time) + 1; //  day of the year (001–366) 
+        case '%m': return date('m', $time); //  month (01–12) 
+        case '%M': return date('i', $time); //  minute (00–59) 
+        case '%p': return date('A', $time); //  local equivalent of AM or PM 
+        case '%S': return date('s', $time); //  second (00–59) 
+        case '%U': return date('W', $time) - 1; //  week number of the year (Sunday= first day of week) (00–53) 
+        case '%w': return date('w', $time); //  weekday (0–6, Sunday is zero) 
+        case '%W': return date('W', $time) - 1; //  week number of the year (Monday = first day of week) (00–53) 
+        case '%x': throw new Exception('Date format not supported: ' . $format); //  local date representation 
+        case '%X': throw new Exception('Date format not supported: ' . $format); //  local time representation
+        case '%y': return date('y', $time); //  year without century (00–99)
+        case '%Y': return date('Y', $time); //  year with century
+        case '%%': return '%'; //  % sign 
+    }
+}
+
+function ws_currentdate($format)
+{
+    ws_config('dateFormat');
+}
+
+function ws_currenttime($format)
+{
+    ws_config('timeFormat');
+}
+
+function ws_currenttimestamp($format)
+{
+    ws_config('timestampFormat');
+}
+
+/**
  * <@ADDROWS ARRAY=arrayVarName VALUE=rowsToAdd
  * [POSITION=position] [SCOPE=scope]>
  *
@@ -272,6 +341,19 @@ function ws_cgiparam($name)
 }
 
 /**
+ * Handles Witango configuration.
+ */
+function ws_config($key, $value = null)
+{
+    static $values = array();
+    if ($value === null) {
+        return @$values[$key];
+    } else {
+        $values[$key] = $value;
+    }
+}
+
+/**
  * <@DATEDIFF DATE1=firstdate DATE2=seconddate [FORMAT=format]>
  *
  * Returns the number of days between the two dates specified.
@@ -454,3 +536,9 @@ function ws_varinfo($var, $attribute)
         throw new Exception('ws_varinfo: size attribute not implemented.');
     }
 }
+
+
+// Set default configuration.
+ws_config('dateFormat', '%m/%d/%Y');
+ws_config('timeFormat', '%H:%M:%S');
+ws_config('timestampFormat', '%m/%d/%Y %H:%M:%S');
