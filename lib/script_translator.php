@@ -33,18 +33,18 @@ class OutputTarget
     {
         $target = new OutputTarget();
         $target->type = self::VARIABLE;
-        $target->variable_name = $variable_ident;
+        $target->variable_ident = $variable_ident;
         return $target;
     }
     
     public function is_stdout()
     {
-        return $this->type === self::VARIABLE;
+        return $this->type === self::STDOUT;
     }
     
     public function is_expression()
     {
-        return $this->type === self::VARIABLE;
+        return $this->type === self::EXPRESSION;
     }
     
     public function is_variable()
@@ -106,9 +106,7 @@ class ScriptTranslator extends AstVisitor
 
 	public function is_control($node)
 	{
-		return $node instanceof MetaTagNode && in_array($node->name,
-				array('assign', 'if', 'ifequal', 'ifempty', 'ifnotempty', 'elseif', 'else')
-		);
+		return $node instanceof MetaTagNode && in_array($node->name, array('assign', 'if', 'ifequal', 'ifempty', 'ifnotempty', 'elseif', 'else'));
 	}
 	
 	public function is_consumed()

@@ -41,7 +41,7 @@ class Witangone
 			return print_r($tree);
 		} else {
             $translator = new ScriptTranslator();
-			return "<?php\n\n" . $this->prettify($translator->visit($tree));
+			return "<?php\n\n" . $this->prettify($translator->visit($tree, OutputTarget::StdOut()));
 		}
 	}
 	
