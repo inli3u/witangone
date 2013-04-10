@@ -3,7 +3,7 @@
 
 require_once('lib/taf_parser.php');
 require_once('lib/script_parser.php');
-require_once('lib/taf_translator.php');
+//require_once('lib/taf_translator.php');
 require_once('lib/script_translator.php');
 
 
@@ -25,8 +25,8 @@ class Witangone
     {
         $parser = new TafParser($code);
         $tree = $parser->parse();
-        $translator = new TafTranslator();
-		return "<?php\n\n" . $this->prettify($translator->visit($tree)); 
+        $translator = new ScriptTranslator();
+		return "<?php\n\n" . $this->prettify($translator->visit($tree, OutputTarget::StdOut())); 
     }
 
 	public function translate_script($code, $flags = array())

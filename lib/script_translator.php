@@ -1,8 +1,8 @@
 <?php
 
-require_once('nodes.php');
-require_once('ast_visitor.php');
-require_once('output_target.php');
+require_once('lib/nodes.php');
+require_once('lib/ast_visitor.php');
+require_once('lib/output_target.php');
 
 
 /*
@@ -66,19 +66,25 @@ class ScriptTranslator extends AstVisitor
         }
     }
 
-	public function visit(ScriptNode $node, $target = null)
+	public function visit(Node $node, $target = null)
 	{
+        $code = '';
+
 		if ($target !== null) {
             $this->push_target($target);
         }
+
+        if (strlen($node->comment)) {
+            $code .= '// ' . $node->comment . "\n";
+        }
 		
-		$result = parent::visit($node);
+		$code .= parent::visit($node);
 
 		if ($target !== null) {
             $this->pop_target($target);
         }
 		
-		return $result;
+		return $code;
 	}
 
 	public function format_for_output($translated_code, ScriptNode $node)
@@ -525,5 +531,149 @@ class ScriptTranslator extends AstVisitor
 		
 		return $src;
 	}
+
+
+
+
+
+
+
+
+
+
+    public function visit_ActionNodeList(ActionNodeList $node)
+    {
+        $src = '';
+        foreach ($node->list as $n) {
+            $src .= $this->visit($n);
+        }
+        return $src;
+    }
+
+    public function visit_IfActionNode(IfActionNode $node)
+    {
+        $expr = $this->visit($node->list['expr'], OutputTarget::Expression());
+
+        $src = "if ($expr)\n";
+        $src .= "{\n";
+        $src .= $this->visit($node->list['block']);
+        $src .= "}\n";
+        return $src;
+    }
+
+    public function visit_ElseIfActionNode(ElseIfActionNode $node)
+    {
+        $expr = $this->visit($node->list['expr'], OutputTarget::Expression());
+
+        $src = "elseif ($expr)\n";
+        $src .= "{\n";
+        $src .= $this->visit($node->list['block']);
+        $src .= "}\n";
+        return $src;
+    }
+
+    public function visit_ElseActionNode(ElseActionNode $node)
+    {
+        $src = "else\n";
+        $src .= "{\n";
+        $src .= $this->visit($node->list['block']);
+        $src .= "}\n";
+        return $src;
+    }
+
+    public function visit_ForActionNode(ForActionNode $node)
+    {
+        $var = '$' . $node->variable;
+        $start = $node->start;
+        $inc = $node->increment;
+        $stop = $this->visit($node->list['stop'], OutputTarget::Expression());
+
+        $src = "for ($var = $start; $var <= $stop; $var += $inc)\n";
+        $src .= "{\n";
+        $src .= $this->visit($node->list['block']);
+        $src .= "}\n";
+        return $src;
+    }
+
+    public function visit_AssignActionNode(AssignActionNode $node)
+    {
+        // TODO: support complex expressions in name.
+        $src = '';
+        foreach ($node->list as $name => $valueTree) {
+            $src .= $this->visit($valueTree, OutputTarget::Variable(new VariableIdentNode($name)));
+        }
+        return $src;
+    }
+
+    public function visit_PresentationActionNode(PresentationActionNode $node)
+    {
+        return "require('" . $node->path . "');\n";
+    }
+
+    public function visit_ReturnActionNode(ReturnActionNode $node)
+    {
+        return "return;\n";
+    }
+
+    public function visit_ResultsActionNode(ResultsActionNode $node)
+    {
+        $src = $this->visit($node->list['script'], OutputTarget::StdOut());
+        return $src;
+    }
+
+    public function visit_DirectDBMSActionNode(DirectDBMSActionNode $node)
+    {
+        die("WHAT THE HELL IS THIS TRANSLATING OF VARIABLE NAMES?!\n");
+        $var = $this->visit($node->list['result_ident'], OutputTarget::Expression());
+        $sql = $this->visit($node->list['sql'], OutputTarget::Expression());
+        return $before . "$var = ws_query($sql);\n"; 
+    }
+
+    public function visit_SearchActionNode(SearchActionNode $node)
+    {
+        $render_column = function($col) {
+            if (strtolower($col['schema']) == 'dbo') {
+                return $col['table'] . '.' . $col['column'];
+            } else {
+                return $col['schema'] . '.' . $col['table'] . '.' . $col['column'];
+            }
+        };
+
+        $columns = array();
+        foreach ($node->columns as $col) {
+            $columns[] = $render_column($col);
+        }
+        $columns_str = implode(', ', $columns);
+        $tables_str = implode(', ', $node->tables);
+
+        $where = array();
+        foreach ($node->criteria as $item) {
+            switch ($item['operator']) {
+            case 'iseq': $op = '='; break;
+            case 'gthn': $op = '>'; break;
+            case 'lthn': $op = '<'; break;
+            case 'gteq': $op = '>='; break;
+            case 'lteq': $op = '<='; break;
+            case 'isin': $op = 'is in'; break;
+            default: $op = $item['operator'];
+            }
+
+            $value = $this->visit($item['value'], OutputTarget::Expression());
+            if ($item['quotevalue']) {
+                $value = "'" . $value . "'";
+            }
+            $where[] = strtoupper(trim($item['conjunction'])) . ' ' . $render_column($item['column']) . ' ' . $op . ' ' . $value;
+        }
+
+        $ws = "<@query \"SELECT $columns_str FROM $tables_str";
+        if (count($where)) {
+            $ws .= ' WHERE ' . implode(' ', $where);
+        };
+        $ws .= "\">";
+
+        $var = '$' . $node->output;
+
+        return "$var = ws_query(\"$sql\");\n";
+    }
 }
 
