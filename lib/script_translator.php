@@ -2,61 +2,50 @@
 
 require_once('nodes.php');
 require_once('ast_visitor.php');
+require_once('output_target.php');
 
 
-class OutputTarget
+/*
+visit_MetaTagNode($node)
 {
-    const EXPRESSION = 1;
-	const STDOUT = 2;
-	const VARIABLE = 3;
-    
-    public $type = null;
-    public $hits = 0;
-    public $variable_ident = null;
-    
-    
-    public static function StdOut()
-    {
-        $target = new OutputTarget();
-        $target->type = self::STDOUT;
-        return $target;
-    }
-    
-    public static function Expression()
-    {
-        $target = new OutputTarget();
-        $target->type = self::EXPRESSION;
-        return $target;
-    }
-    
-    public static function Variable($variable_ident)
-    {
-        $target = new OutputTarget();
-        $target->type = self::VARIABLE;
-        $target->variable_ident = $variable_ident;
-        return $target;
-    }
-    
-    public function is_stdout()
-    {
-        return $this->type === self::STDOUT;
-    }
-    
-    public function is_expression()
-    {
-        return $this->type === self::EXPRESSION;
-    }
-    
-    public function is_variable()
-    {
-        return $this->type === self::VARIABLE;
-    }
+	$result = parent::visit_MetaTagNode($node);
+	$result->childNode
+}
+
+public function meta_ifempty($node)
+{
+	$result = parent::meta_ifempty($node);
+	return "if ($result->valueNode == null)\n{\n$result->childNode}\n";
+}
+
+public function visit_MetaTagNode($node)
+{
+	$result = parent::meta_ifempty($node);
+	foreach ($result->argNodes as $n) {
+		if 
+	}
+}
+
+At the fragment level:
+option 1 - throw excpetion, rethrow until output is not Expression, exception contains complex node.
+$node->extract_complex_expression
+*/
+
+
+class NestedComplexNodeError extends exception
+{
+	public function __construct($node)
+	{
+		parent::__construct();
+		$this->node = $node;
+	}
 }
 
 
 class ScriptTranslator extends AstVisitor
 {
 	private $target = array();
+	private $extracted_complex_nodes = array();
 
 
 	public function push_target(OutputTarget $target)
@@ -92,46 +81,100 @@ class ScriptTranslator extends AstVisitor
 		return $result;
 	}
 
+	public function format_for_output($translated_code, ScriptNode $node)
+	{
+		$target = $this->get_target();
+		$result = '';
+
+		if ($node->is_complex()) {
+
+			// Complex statements (if, while, etc) don't need any extra formatting.
+			// However if being passed as an argument they need to be assigned to a temp variable.
+
+			if ($target->is_expression()) {
+				//throw new NestedComplexNodeError($node);
+			}
+
+			$result = $translated_code;
+
+
+		} else {
+
+			// Non-complex statements need to be echoed, assigned to a variable, or passed as an argument.
+
+			if ($target->is_stdout()) {
+                $result = "echo $translated_code;\n";
+            } elseif ($target->is_variable()) {
+                $variable = $this->make_variable($target->variable_ident);
+                if ($target->hits === 0) {
+                    $result = "$variable = $translated_code;\n";
+                } else {
+                    $result = "$variable .= $translated_code;\n";
+                }
+                $target->hits++;
+            } else {
+            	$result = $translated_code;
+            }
+		}
+
+		return $result;
+	}
+
 	public function visit_FragmentNode(FragmentNode $node)
 	{
 		$code = array();
-		
         $target = $this->get_target();
-		$target_str = '';
 		
-		foreach ($node->list as $n) {
-			$result = $this->visit($n);
+		foreach ($node->list as $i => $child_node) {
+
+			if ($target->is_expression() && $child_node->is_complex()) {
+
+				if ('else' == substr($child_node->name, 0, 4)) {
+					// Else statements should use same temp var name as previous if statement
+					list($temp_ident_node) = $this->extracted_complex_nodes[count($this->extracted_complex_nodes) - 1];
+					$replacement_node = new NoopNode();
+				} else {
+					// Non-else statements should make a new name.
+					$temp_ident_node = new VariableIdentNode('temp' . (count($this->extracted_complex_nodes) + 1));
+					$replacement_node = new VariableNode();
+					$replacement_node->child = $temp_ident_node;
+				}
+				
+				$this->extracted_complex_nodes[] = array($temp_ident_node, $child_node);
+
+				$child_node = $replacement_node;
+				$node->list[$i] = $child_node;
+			}
+
+			// Generate code from node.
+			$result = $this->visit($child_node);
 			if ($result === false) {
+				// Translation resulted in no output, possibly because of a noop.
 				continue;
 			}
-			// Each node will be translated to a single expression or statement.
 
-			// TODO: Make CalculationNode...
-			//if ($n instanceof MetaTagNode && strtolower($n->name) === 'calc') {
-			//	$result = '(' . $result . ')';
-			//}
+			//$result = $target->format_statement($result, $child_node);
+			$result = $this->format_for_output($result, $child_node);
 
-			if (!$n->is_complex()) {
-
-                if ($target->is_variable()) {
-                    $variable = $this->make_variable($target->variable_ident);
-                    if ($target->hits === 0) {
-                        $result = "$variable = $result;\n";
-                    } else {
-                        $result = "$variable .= $result;\n";
-                    }
-                    $target->hits++;
-                } elseif ($target->is_stdout()) {
-                    $result = "echo $result;\n";
-                }
+			if (!$target->is_expression() && count($this->extracted_complex_nodes)) {
+				$extracted_complex_nodes = $this->extracted_complex_nodes;
+				$this->extracted_complex_nodes = array();
+				foreach ($extracted_complex_nodes as $item) {
+					list($temp_ident_node, $complex_node) = $item;
+					$complex_assignment = $this->visit($complex_node, OutputTarget::Variable($temp_ident_node));
+					$code[] = $complex_assignment;
+				}
 			}
 
 			$code[] = $result;
 		}
         
+        // Sibling statements must be joined
 		if ($target->is_expression()) {
+			// Concatenate if passing these as an argument
 			return implode(' . ', $code);
 		} else {
+			// Otherwise these are separate lines of code, just join.
 			return implode('', $code);
 		}
 	}
@@ -393,9 +436,7 @@ class ScriptTranslator extends AstVisitor
 		if (!strlen($ident->scope)) {
 			$ident->scope = @$node->list['scope']->list[0]->value;
 		}
-		//$this->push_output(self::VARIABLE, $ident);
 		$result = $this->visit($node->list['value'], OutputTarget::Variable($ident));
-		//$this->pop_output();
 		return $result;
 	}
 

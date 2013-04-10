@@ -11,9 +11,17 @@ variable assignment containing control structures - all nested outputs get $var 
 
 <@assign name='request$var2' 'text<@if "1=2">more<@else>less</@if>'>
 
-expression containing control structures - do variable assignment first
+expression containing control structures
 
-<@left 'text<@if "1=2">more<@else>less</@if>' 5>
+<@left 'text<@if "1 = 2">more<@else>less</@if>' 5>
+
+expression containing multiple control structures
+
+<@left 'text<@if "1 = 2">more<@else>less</@if> - <@if "3 = 4">this<@else>that</@if>' 5>
+
+expression containing nested control structures
+
+<@left 'text<@if "1 = 2">mo<@keep "<@if '8=9'>re</@if>" "12"><@else>less</@if>' 5>
 
 expression containing functions just for testing
 

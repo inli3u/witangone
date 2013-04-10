@@ -2,6 +2,7 @@
 
 require_once('nodes.php');
 require_once('ast_visitor.php');
+require_once('output_target.php');
 
 
 class TafTranslator extends AstVisitor
@@ -16,15 +17,11 @@ class TafTranslator extends AstVisitor
     {
         $t = new ScriptTranslator();
         if ($node->is_complex()) {
-            $t->push_output(ScriptTranslator::VARIABLE, new VariableIdentNode($tempVarName));
-            $before = $t->visit($node);
+            $before = $t->visit($node, OutputTarget::Variable(new VariableIdentNode($tempVarName)));
             $expr = '$' . $tempVarName;
-			$t->pop_output();
         } else {
-            $t->push_output(ScriptTranslator::EXPRESSION);
             $before = '';
-            $expr = $t->visit($node);
-			$t->pop_output();
+            $expr = $t->visit($node, OutputTarget::Expression());
         }
 
         return array($before, $expr);
@@ -90,9 +87,7 @@ class TafTranslator extends AstVisitor
 		$var = '$' . $node->variable;
 		$start = $node->start;
 		$inc = $node->increment;
-		$translator->push_output(ScriptTranslator::EXPRESSION);
-		$stop = $translator->visit($node->list['stop']);
-		$translator->pop_output();
+		$stop = $translator->visit($node->list['stop'], OutputTarget::Expression());
 
         $src = "for ($var = $start; $var <= $stop; $var += $inc)\n";
         $src .= "{\n";
@@ -107,9 +102,7 @@ class TafTranslator extends AstVisitor
 		$translator = new ScriptTranslator();
 		$src = '';
 		foreach ($node->list as $name => $valueTree) {
-			$translator->push_output(ScriptTranslator::VARIABLE, new VariableIdentNode($name));
-			$src .= $translator->visit($valueTree);
-			$translator->pop_output();
+			$src .= $translator->visit($valueTree, OutputTarget::Variable(new VariableIdentNode($name)));
 		}
 		return $src;
 	}
@@ -127,19 +120,15 @@ class TafTranslator extends AstVisitor
 	public function visit_ResultsActionNode(ResultsActionNode $node)
 	{
 		$translator = new ScriptTranslator();
-		$translator->push_output(ScriptTranslator::STDOUT);
-		$src = $translator->visit($node->list['script']);
-		$translator->pop_output();
+		$src = $translator->visit($node->list['script'], OutputTarget::StdOut());
 		return $src;
 	}
 
 	public function visit_DirectDBMSActionNode(DirectDBMSActionNode $node)
 	{
 		$translator = new ScriptTranslator();
-		$translator->push_output(ScriptTranslator::EXPRESSION);
-		$var = $translator->visit($node->list['result_ident']);
+		$var = $translator->visit($node->list['result_ident'], OutputTarget::Expression());
 		list($before, $sql) = $this->render_expression($node->list['sql'], 'sql');
-		$translator->pop_output();
 		return $before . "$var = ws_query($sql);\n"; 
 	}
 
@@ -173,19 +162,18 @@ class TafTranslator extends AstVisitor
             }
 
             $translator = new ScriptTranslator();
-            $translator->push_output(ScriptTranslator::EXPRESSION);
-            $value = $translator->visit($item['value']);
-            $translator->pop_output();
+            $value = $translator->visit($item['value'], OutputTarget::Expression());
             if ($item['quotevalue']) {
                 $value = "'" . $value . "'";
             }
             $where[] = strtoupper(trim($item['conjunction'])) . ' ' . $render_column($item['column']) . ' ' . $op . ' ' . $value;
         }
 
-        $sql = "SELECT $columns_str FROM $tables_str";
+        $ws = "<@query \"SELECT $columns_str FROM $tables_str";
         if (count($where)) {
-            $sql .= ' WHERE ' . implode(' ', $where);
+            $ws .= ' WHERE ' . implode(' ', $where);
         };
+        $ws .= "\">";
 
         $var = '$' . $node->output;
 
