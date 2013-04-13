@@ -56,12 +56,19 @@ class Witangone
 		
 		foreach ($in as $line) {
 			$line = trim($line);
+			$line_level_adjustment = 0;
+
 			if (strlen($line)) {
 				if (substr($line, 0, 1) === '}') {
 					$level -= 1;
 				}
 				
-				$line = str_repeat("\t", $level) . $line;
+				// Support for one style of line continuation.
+				if (substr($line, 0, 2) === '->') {
+					$line_level_adjustment = 1;
+				}
+
+				$line = str_repeat("\t", $level + $line_level_adjustment) . $line;
 				
 				if (substr($line, -1) === '{') {
 					$level++;

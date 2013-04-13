@@ -543,11 +543,25 @@ class ScriptTranslator extends AstVisitor
 
     public function visit_ActionNodeList(ActionNodeList $node)
     {
-        $src = '';
+        $code = '';
         foreach ($node->list as $n) {
-            $src .= $this->visit($n);
+            $result = $this->visit($n);
+
+            // Handle extracted statements, copied from visit_FragmentListNode()
+            $target = $this->get_target();
+			if (!$target->is_expression() && count($this->extracted_complex_nodes)) {
+				$extracted_complex_nodes = $this->extracted_complex_nodes;
+				$this->extracted_complex_nodes = array();
+				foreach ($extracted_complex_nodes as $item) {
+					list($temp_ident_node, $complex_node) = $item;
+					$complex_assignment = $this->visit($complex_node, OutputTarget::Variable($temp_ident_node));
+					$code .= $complex_assignment;
+				}
+			}
+
+            $code .= $result;
         }
-        return $src;
+        return $code;
     }
 
     public function visit_IfActionNode(IfActionNode $node)
@@ -623,7 +637,7 @@ class ScriptTranslator extends AstVisitor
 
     public function visit_DirectDBMSActionNode(DirectDBMSActionNode $node)
     {
-        die("WHAT THE HELL IS THIS TRANSLATING OF VARIABLE NAMES?!\n");
+        //die("WHAT THE HELL IS THIS TRANSLATING OF VARIABLE NAMES?!\n");
         $var = $this->visit($node->list['result_ident'], OutputTarget::Expression());
         $sql = $this->visit($node->list['sql'], OutputTarget::Expression());
         return $before . "$var = ws_query($sql);\n"; 
@@ -649,31 +663,40 @@ class ScriptTranslator extends AstVisitor
         $where = array();
         foreach ($node->criteria as $item) {
             switch ($item['operator']) {
-            case 'iseq': $op = '='; break;
-            case 'gthn': $op = '>'; break;
-            case 'lthn': $op = '<'; break;
-            case 'gteq': $op = '>='; break;
-            case 'lteq': $op = '<='; break;
-            case 'isin': $op = 'is in'; break;
-            default: $op = $item['operator'];
+	            case 'iseq': $op = '='; break;
+	            case 'gthn': $op = '>'; break;
+	            case 'lthn': $op = '<'; break;
+	            case 'gteq': $op = '>='; break;
+	            case 'lteq': $op = '<='; break;
+	            case 'isin': $op = 'is in'; break;
+            	default: $op = $item['operator'];
             }
 
             $value = $this->visit($item['value'], OutputTarget::Expression());
             if ($item['quotevalue']) {
-                $value = "'" . $value . "'";
+                $value = "" . $value . "";
             }
-            $where[] = strtoupper(trim($item['conjunction'])) . ' ' . $render_column($item['column']) . ' ' . $op . ' ' . $value;
+            $conj = strtoupper(trim($item['conjunction']));
+            $column = $render_column($item['column']);
+            $where[] = "\n->where('$column $op', $value)";
         }
 
-        $ws = "<@query \"SELECT $columns_str FROM $tables_str";
+
+        $sql = "SELECT $columns_str FROM $tables_str";
         if (count($where)) {
-            $ws .= ' WHERE ' . implode(' ', $where);
+            $sql .= ' WHERE ' . implode(' ', $where);
         };
-        $ws .= "\">";
 
         $var = '$' . $node->output;
 
-        return "$var = ws_query(\"$sql\");\n";
+        $code = "$var = \$db->query";
+        $code .= "\n->select('$columns_str')";
+        $code .= "\n->from('$tables_str')";
+        if (count($where)) {
+        	$code .= implode('', $where);
+        }
+        $code .= ";\n";
+        return $code;
     }
 }
 
