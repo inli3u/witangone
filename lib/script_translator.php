@@ -674,7 +674,7 @@ class ScriptTranslator extends AstVisitor
 
             $value = $this->visit($item['value'], OutputTarget::Expression());
             if ($item['quotevalue']) {
-                $value = "" . $value . "";
+                $value = "\$db->quote($value)";
             }
             $conj = strtoupper(trim($item['conjunction']));
             $column = $render_column($item['column']);
