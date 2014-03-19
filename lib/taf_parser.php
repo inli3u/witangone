@@ -61,7 +61,7 @@ class TafParser
 
     function get_column_info($table_str, $column_str)
     {
-        $schema = 'dbo';
+        $schema = '';
 
         $parts = array_reverse(explode('.', $table_str));
         $table = $parts[0];
@@ -69,13 +69,20 @@ class TafParser
             $schema = $parts[1];
         }
 
-        $parts = array_reverse(explode('.', $column_str));
-        $column = $parts[0];
-        if (isset($parts[1])) {
-            $table = $parts[1];
-        }
-        if (isset($parts[2])) {
-            $schema = $parts[2];
+        if (false !== strpos($column_str, '(') || false !== strpos($column_str, ')')) {
+            // Aggregate function in use, don't try to split blindly.
+            $column = $column_str;
+        } else {
+
+            $parts = array_reverse(explode('.', $column_str));
+            $column = $parts[0];
+            if (isset($parts[1])) {
+                $table = $parts[1];
+            }
+            if (isset($parts[2]) && strtolower($parts[2]) != 'dbo') {
+                $schema = $parts[2];
+            }
+
         }
 
         return array('schema' => $schema, 'table' => $table, 'column' => $column);
@@ -178,36 +185,69 @@ class TafParser
         return $tree;
     }
 
+    // Ignore references to dbo.
+    // TODO: Add distinct, etc.
     function parse_SearchAction($action_ref, $action)
     {
         $tree = new SearchActionNode();
         
-        $tables = array();
-        foreach ($action->Tables->children() as $table) {
-            $tables[] = (string)$table;
+        $tables = [];
+        if ($action->Tables) {
+            foreach ($action->Tables->children() as $table) {
+                $table = (string)$table;
+                if (strtolower(substr($table, 0, 4)) == 'dbo.') {
+                    $table = substr($table, 4);
+                }
+                $tables[] = $table;
+            }
         }
 
-        $columns = array();
-        foreach ($action->SearchColumns->children() as $col) {
-            $columns[] = $this->get_column_info((string)$col->TableName, (string)$col->ColumnName);
+        $columns = [];
+        if ($action->SearchColumns) {
+            foreach ($action->SearchColumns->children() as $col) {
+                $column = $this->get_column_info((string)$col->TableName, (string)$col->ColumnName);
+                $columns[] = $column;
+                // Tables can be defined in the column without being mentioned in the Tables section.
+                if (strlen($column['table'])) {
+                    if ($column['schema'] != '' && $column['schema'] != 'dbo') {
+                        $tables[] = $column['schema'] . '.' . $column['table'];
+                    } else {
+                        $tables[] = $column['table'];
+                    }
+                }
+            }
         }
 
-        $criteria = array();
-        foreach ($action->Criteria->children() as $item) {
-            $value = ScriptParser::get_fragment((string)$item->Value);
-            $criteria[] = array(
-                'conjunction' => (string)$item->Conjunction,
-                'column' => $this->get_column_info((string)$item->TableName, (string)$item->ColumnName),
-                'operator' => (string)$item->Operator,
-                'value' => $value,
-                'quotevalue' => (bool)$item->QuoteValue,
-                'includeifempty' => (bool)$item->IncludeIfEmpty
-            );
+        $criteria = [];
+        if ($action->Criteria) {
+            foreach ($action->Criteria->children() as $item) {
+                $value = ScriptParser::get_fragment((string)$item->Value);
+                $criteria[] = array(
+                    'conjunction' => (string)$item->Conjunction,
+                    'column' => $this->get_column_info((string)$item->TableName, (string)$item->ColumnName),
+                    'operator' => (string)$item->Operator,
+                    'value' => $value,
+                    'quotevalue' => (bool)$item->QuoteValue,
+                    'includeifempty' => (bool)$item->IncludeIfEmpty
+                );
+            }
         }
+
+        $tables = array_values(array_unique($tables));
 
         $tree->tables = $tables;
         $tree->columns = $columns;
         $tree->criteria = $criteria;
+
+        if ($action->MaxRows && strlen($action->MaxRows) > 0) {
+            $tree->limit = (int)$action->MaxRows;
+        }
+        if ($action->StartRow && strlen($action->StartRow) > 0) {
+            $offset = (int)$action->StartRow - 1;
+            if ($offset > 0) {
+                $tree->offset = $offset;
+            }
+        }
         $tree->output = (string)$action->ResultSet['Name'];
         return $tree;
     }

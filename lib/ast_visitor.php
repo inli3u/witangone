@@ -2,7 +2,7 @@
 
 class AstVisitor
 {
-	public function visit($node)
+	public function visit(Node $node, $target = null)
 	{
 		$method = 'visit_' . get_class($node);
 		if (method_exists($this, $method)) {

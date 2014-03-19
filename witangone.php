@@ -26,7 +26,7 @@ class Witangone
         $parser = new TafParser($code);
         $tree = $parser->parse();
         $translator = new ScriptTranslator();
-		return "<?php\n\n" . $this->prettify($translator->visit($tree, OutputTarget::StdOut())); 
+		return $this->get_bootstrap_code() . $this->prettify($translator->visit($tree, OutputTarget::StdOut())); 
     }
 
 	public function translate_script($code, $flags = array())
@@ -41,7 +41,7 @@ class Witangone
 			return print_r($tree);
 		} else {
             $translator = new ScriptTranslator();
-			return "<?php\n\n" . $this->prettify($translator->visit($tree, OutputTarget::StdOut()));
+			return $this->get_bootstrap_code() . $this->prettify($translator->visit($tree, OutputTarget::StdOut()));
 		}
 	}
 	
@@ -78,6 +78,15 @@ class Witangone
 		}
 		
 		return implode("\n", $out);
+	}
+
+	private function get_bootstrap_code()
+	{
+		static $code = null;
+		if ($code === null) {
+			$code = file_get_contents('template/bootstrap-loader.php');
+		}
+		return $code;
 	}
 }
 

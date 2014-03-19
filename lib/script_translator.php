@@ -55,7 +55,7 @@ class ScriptTranslator extends AstVisitor
 
 	public function pop_target()
 	{
-		array_pop($this->target);
+		return array_pop($this->target);
 	}
     
     public function get_target()
@@ -228,10 +228,11 @@ class ScriptTranslator extends AstVisitor
 			$list[$arg_name] = $this->visit($arg, OutputTarget::Expression());
 		}
 		
+		$lib = 'WitangoLib::';
 		$args = array();
 		switch ($node->name) {
             case 'addrows':
-                $name = 'ws_addrows';
+                $name = $lib . 'addrows';
                 $args[] = $list['array'];
                 $args[] = $list['value'];
                 if (array_key_exists('position', $list)) {
@@ -239,10 +240,10 @@ class ScriptTranslator extends AstVisitor
                 }
                 break;
 			case 'appfile':
-				$name = 'ws_appfile';
+				$name = $lib . 'appfile';
 				break;
 			case 'array':
-				$name = 'ws_array';
+				$name = $lib . 'array';
 				$args[] = strlen(@$list['rows']) ? $list['rows'] : 'null';
 				$args[] = strlen(@$list['cols']) ? $list['cols'] : 'null';
 				if (array_key_exists('value', $list)) { $args[] = $list['value']; }
@@ -250,10 +251,10 @@ class ScriptTranslator extends AstVisitor
 				if (array_key_exists('rdelim', $list)) { $args[] = $list['rdelim']; }
 				break;
 			case 'cgi':
-				$name = 'ws_cgi';
+				$name = $lib . 'cgi';
 				break;
 			case 'cgiparam':
-				$name = 'ws_cgiparam';
+				$name = $lib . 'cgiparam';
 				$args[] = $list['name'];
 				break;
 			case 'char':
@@ -261,27 +262,27 @@ class ScriptTranslator extends AstVisitor
 				$args[] = $list['code'];
 				break;
             case 'currentdate':
-				$name = 'ws_currentdate';
+				$name = $lib . 'currentdate';
 				$args[] = strlen(@$list['format']) ? $list['format'] : null;
 				break;
             case 'currenttime':
-				$name = 'ws_currenttime';
+				$name = $lib . 'currenttime';
 				$args[] = strlen(@$list['format']) ? $list['format'] : null;
 				break;
             case 'currenttimestamp':
-				$name = 'ws_currenttimestamp';
+				$name = $lib . 'currenttimestamp';
 				$args[] = strlen(@$list['format']) ? $list['format'] : null;
 				break;
 			case 'datediff':
-				$name = 'ws_datediff';
+				$name = $lib . 'datediff';
 				$args = array($list['date1'], $list['date2']);
 				break;
 			case 'httpattribute':
-				$name = 'ws_cgiparam';
+				$name = $lib . 'cgiparam';
 				$args[] = $list['name'];
 				break;
 			case 'keep':
-				$name = 'ws_keep';
+				$name = $lib . 'keep';
 				$args[] = $list['str'];
 				$args[] = $list['chars'];
 				break;
@@ -296,15 +297,15 @@ class ScriptTranslator extends AstVisitor
 				$args[] = $list['str'];
 				break;
 			case 'numrows':
-				$name = 'ws_numrows';
+				$name = $lib . 'numrows';
 				$args = strlen(@$list['array']) ? array(@$list['array']) : array();
 				break;
 			case 'numcols':
-				$name = 'ws_numcols';
+				$name = $lib . 'numcols';
 				$args = strlen(@$list['array']) ? array(@$list['array']) : array();
 				break;
 			case 'omit':
-				$name = 'ws_omit';
+				$name = $lib . 'omit';
 				$args[] = $list['str'];
 				$args[] = $list['chars'];
 				break;
@@ -318,17 +319,17 @@ class ScriptTranslator extends AstVisitor
 				$args[] = strlen(@$list['high']) ? $list['high'] : 32767;
 				break;
 			case 'replace':
-				$name = 'str_replace';
+				$name = $lib . 'replace';
 				// TODO: support 'position' arg.
 				$args = array($list['findstr'], $list['replacestr'], $list['str']);
 				break;
 			case 'sort':
-				$name = 'ws_sort';
+				$name = $lib . 'sort';
 				$args[] = $list['array'];
 				$args[] = $list['cols'];
 				break;
             case 'varinfo':
-                $name = 'ws_varinfo';
+                $name = $lib . 'varinfo';
                 $args[] = $list['name'];
                 $args[] = $list['attribute'];
                 break;
@@ -640,62 +641,86 @@ class ScriptTranslator extends AstVisitor
         //die("WHAT THE HELL IS THIS TRANSLATING OF VARIABLE NAMES?!\n");
         $var = $this->visit($node->list['result_ident'], OutputTarget::Expression());
         $sql = $this->visit($node->list['sql'], OutputTarget::Expression());
-        return $before . "$var = ws_query($sql);\n"; 
+        return "$var = toArray(DB::select($sql));\n"; 
     }
 
     public function visit_SearchActionNode(SearchActionNode $node)
     {
         $render_column = function($col) {
-            if (strtolower($col['schema']) == 'dbo') {
-                return $col['table'] . '.' . $col['column'];
-            } else {
-                return $col['schema'] . '.' . $col['table'] . '.' . $col['column'];
+        	$parts = [];
+
+            if ($col['schema'] != '' && strtolower($col['schema']) != 'dbo') {
+            	$parts[] = $col['schema'];
             }
+            if ($col['table'] != '') {
+            	$parts[] = $col['table'];
+            }
+            $parts[] = $col['column'];
+            return implode('.', $parts);
         };
 
-        $columns = array();
-        foreach ($node->columns as $col) {
-            $columns[] = $render_column($col);
-        }
-        $columns_str = implode(', ', $columns);
-        $tables_str = implode(', ', $node->tables);
+        $query = [];
 
-        $where = array();
-        foreach ($node->criteria as $item) {
-            switch ($item['operator']) {
-	            case 'iseq': $op = '='; break;
-	            case 'gthn': $op = '>'; break;
-	            case 'lthn': $op = '<'; break;
-	            case 'gteq': $op = '>='; break;
-	            case 'lteq': $op = '<='; break;
-	            case 'isin': $op = 'is in'; break;
-            	default: $op = $item['operator'];
-            }
-
-            $value = $this->visit($item['value'], OutputTarget::Expression());
-            if ($item['quotevalue']) {
-                $value = "\$db->quote($value)";
-            }
-            $conj = strtoupper(trim($item['conjunction']));
-            $column = $render_column($item['column']);
-            $where[] = "\n->where('$column $op', $value)";
-        }
-
-
-        $sql = "SELECT $columns_str FROM $tables_str";
-        if (count($where)) {
-            $sql .= ' WHERE ' . implode(' ', $where);
-        };
-
+        // Begin query.
         $var = '$' . $node->output;
+        $table = $node->tables[0];
+        $query[] = "$var = toArray(DB::table('$table')";
 
-        $code = "$var = \$db->query";
-        $code .= "\n->select('$columns_str')";
-        $code .= "\n->from('$tables_str')";
-        if (count($where)) {
-        	$code .= implode('', $where);
+        // Joins.
+        for ($i = 1; $i < count($node->tables); $i++) {
+        	$join = $node->tables[$i];
+        	$query[] = "\t->join('$join')";
         }
-        $code .= ";\n";
+
+        // Column names.
+        if (count($node->columns)) {
+	        $columns = [];
+	        foreach ($node->columns as $col) {
+	            $columns[] = "'" . $render_column($col) . "'";
+	        }
+	        $query[] = "\t->select(" . implode(', ', $columns) . ")";
+	    }
+
+	    // Where clause.
+	    if (count($node->criteria)) {
+	        foreach ($node->criteria as $item) {
+	            switch ($item['operator']) {
+		            case 'iseq': $op = '='; break;
+		            case 'gthn': $op = '>'; break;
+		            case 'lthn': $op = '<'; break;
+		            case 'gteq': $op = '>='; break;
+		            case 'lteq': $op = '<='; break;
+		            case 'isnt': $op = '<>'; break;
+		            case 'isin': $op = 'is in'; break;
+	            	default: $op = $item['operator'];
+	            }
+
+	            $column = $render_column($item['column']);
+	            $value = $this->visit($item['value'], OutputTarget::Expression());
+	            if (!$item['quotevalue']) {
+	                // DB layer escapes all values by defaults so don't handle the "not quoted" case.
+	                // If not escaping is desired the DB layer supports raw values.
+	            }
+	            
+	            if ($op == 'is in') {
+	            	$query[] = "\t->whereIn('$column', '$op', array_map('trim', explode(',', $value)))";
+	            } else {
+	            	$query[] = "\t->where('$column', '$op', $value)";
+	        	}
+	        }
+	    }
+
+	    if ($node->limit !== null) {
+	    	$query[] = "\t->take({$node->limit})";
+	    }
+
+	    if ($node->offset !== null) {
+	    	$query[] = "\t->skip({$node->offset})";
+	    }
+
+	    $query[] = "\t->get())";
+
+        $code = implode("\n", $query) . ";\n";
         return $code;
     }
 }

@@ -61,6 +61,8 @@ class SearchActionNode extends ActionNode
     public $columns = array();
     public $tables = array();
     public $criteria = array();
+    public $limit;
+    public $offset;
     public $output = '';
 }
 
@@ -121,7 +123,7 @@ class BinaryNode extends ScriptNode
 
     public function is_complex()
     {
-        return $this->left && $this->left->is_complex() || $this->right && $this->right->is_complex();
+        return ($this->left && $this->left->is_complex()) || ($this->right && $this->right->is_complex());
     }
 }
 

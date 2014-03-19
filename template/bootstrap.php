@@ -19,3 +19,11 @@ $db->addConnection([
 
 // Make this Capsule instance available globally via static methods... (optional)
 $db->setAsGlobal();
+
+function toArray($rows)
+{
+	foreach ($rows as $i => $row) {
+		$rows[$i] = array_values($row);
+	}
+	return $rows;
+}

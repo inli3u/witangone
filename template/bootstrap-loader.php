@@ -12,6 +12,6 @@ require_once $bootstrap;
 // END BOOTSTRAP.
 
 use Illuminate\Database\Capsule\Manager as DB;
-//use Witangone\StdLib as W;
+use Witangone\WitangoLib;
 
-$notes = DB::table('civicrm_note')->get();
+
