@@ -1,7 +1,8 @@
 <?php
 
-require_once('nodes.php');
-require_once('script_parser.php');
+require_once(PATH . 'lib/exceptions/unknown_symbol_error.php');
+require_once(PATH . 'lib/nodes.php');
+require_once(PATH . 'lib/script_parser.php');
 
 
 class TafParser
@@ -47,13 +48,19 @@ class TafParser
             $action = $this->get_xml_element((string)$action_ref['Ref']);
             
             $method = 'parse_' . $action->getName();
-            if (method_exists($this, $method)) {
-                $node = $this->{$method}($action_ref, $action);
-                $node->comment = 'Action: ' . (string)$action['ID'];
-                $tree->list[] = $node;
-            } else {
-                echo 'Unknown action: ' . $action->getName() . "\n";
+            if (!method_exists($this, $method)) {
+                $msg = 'Unknown action: ' . $action->getName() . "\n";
+                if (!ALLOW_MISSING_SYMBOLS) {
+                    throw new UnknownSymbolError(null, $msg);
+                } else {
+                    $method = 'parse_UnknownAction';
+                    Witangone::track_missing_action($action->getName());
+                }
             }
+
+            $node = $this->{$method}($action_ref, $action);
+            $node->comment = 'Action: ' . (string)$action['ID'];
+            $tree->list[] = $node;
         }
 
         return $tree;
@@ -86,6 +93,11 @@ class TafParser
         }
 
         return array('schema' => $schema, 'table' => $table, 'column' => $column);
+    }
+
+    function parse_UnknownAction($action_ref, $action)
+    {
+        return new UnknownActionNode($action->getName());
     }
 
     function parse_IfAction($action_ref, $action)
@@ -185,12 +197,8 @@ class TafParser
         return $tree;
     }
 
-    // Ignore references to dbo.
-    // TODO: Add distinct, etc.
-    function parse_SearchAction($action_ref, $action)
+    function fill_database_action($tree, $action)
     {
-        $tree = new SearchActionNode();
-        
         $tables = [];
         if ($action->Tables) {
             foreach ($action->Tables->children() as $table) {
@@ -233,11 +241,25 @@ class TafParser
             }
         }
 
+        $values = [];
+        if ($action->ValueList) {
+            foreach ($action->ValueList->children() as $item) {
+                $values[] = array(
+                    'name' => (string)$item->Name,
+                    'value' => ScriptParser::get_fragment((string)$item->Value),
+                    'quotevalue' => ($item->QuoteValue == 'true') ? true : false,
+                    'includeifempty' => ($item->IncludeIfEmpty == 'true') ? true : false,
+                    'nullvalue' => ($item->NullValue == 'true') ? true : false,
+                );
+            }
+        }
+
         $tables = array_values(array_unique($tables));
 
         $tree->tables = $tables;
         $tree->columns = $columns;
         $tree->criteria = $criteria;
+        $tree->values = $values;
 
         if ($action->MaxRows && strlen($action->MaxRows) > 0) {
             $tree->limit = (int)$action->MaxRows;
@@ -248,29 +270,51 @@ class TafParser
                 $tree->offset = $offset;
             }
         }
+    }
+
+    // Ignore references to dbo.
+    // TODO: Add distinct, etc.
+    function parse_SearchAction($action_ref, $action)
+    {
+        $tree = new SearchActionNode();
+        $this->fill_database_action($tree, $action);
         $tree->output = (string)$action->ResultSet['Name'];
         return $tree;
     }
 
-	/*
+    /**
+     * TODO: Things to support:
+     * <IncludeIfEmpty>true</IncludeIfEmpty>
+     * <NullValue>false</NullValue>
+     */
     function parse_InsertAction($action_ref, $action)
     {
-        echo "not implemented: InsertAction\n";
-        return "// SQL Insert.\n";
+        $tree = new InsertActionNode();
+        $this->fill_database_action($tree, $action);
+        return $tree;
     }
 
+
+    /**
+     * TODO: Things to support:
+     * <IncludeIfEmpty>true</IncludeIfEmpty>
+     * <NullValue>false</NullValue>
+     */
     function parse_UpdateAction($action_ref, $action)
     {
-        echo "not implemented: UpdateAction\n";
-        return "// SQL Update.\n";
+        $tree = new UpdateActionNode();
+        $this->fill_database_action($tree, $action);
+        return $tree;
     }
 
     function parse_DeleteAction($action_ref, $action)
     {
-        echo "not implemented: DeleteAction\n";
-        return "// SQL Delete.\n";
+        $tree = new DeleteActionNode();
+        $this->fill_database_action($tree, $action);
+        return $tree;
     }
 
+    /*
     function parse_MailAction($action_ref, $action)
     {
         echo "not implemented: MailAction\n";

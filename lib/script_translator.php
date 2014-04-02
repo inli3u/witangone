@@ -1,8 +1,8 @@
 <?php
 
-require_once('lib/nodes.php');
-require_once('lib/ast_visitor.php');
-require_once('lib/output_target.php');
+require_once(PATH . 'lib/nodes.php');
+require_once(PATH . 'lib/ast_visitor.php');
+require_once(PATH . 'lib/output_target.php');
 
 
 /*
@@ -243,7 +243,7 @@ class ScriptTranslator extends AstVisitor
 				$name = $lib . 'appfile';
 				break;
 			case 'array':
-				$name = $lib . 'array';
+				$name = $lib . 'makearray';
 				$args[] = strlen(@$list['rows']) ? $list['rows'] : 'null';
 				$args[] = strlen(@$list['cols']) ? $list['cols'] : 'null';
 				if (array_key_exists('value', $list)) { $args[] = $list['value']; }
@@ -334,8 +334,12 @@ class ScriptTranslator extends AstVisitor
                 $args[] = $list['attribute'];
                 break;
 			default:
-				$name = '// UNKNOWN FUNCTION "' . $node->name . '"';
-                echo 'Unknown function: ' . $node->name . "\n";
+				if (ALLOW_MISSING_SYMBOLS) {
+					$name = '/* UNKNOWN META TAG "' . $node->name . '" */ ' . $lib . 'unknown_meta_tag';
+					$args = ["'" . $node->name . "'"];
+	            } else {
+	            	throw new UnknownSymbolError(null, "Unknown function '" . $node->name . "'");
+	            }
 		}
 		
 		return $name . '(' . implode(', ', $args) . ')';
@@ -541,6 +545,10 @@ class ScriptTranslator extends AstVisitor
 
 
 
+    public function visit_UnknownActionNode(UnknownActionNode $node)
+    {
+        return '// UNKNOWN ACTION: ' . $node->name . "\n";
+    }
 
     public function visit_ActionNodeList(ActionNodeList $node)
     {
@@ -646,39 +654,72 @@ class ScriptTranslator extends AstVisitor
 
     public function visit_SearchActionNode(SearchActionNode $node)
     {
-        $render_column = function($col) {
-        	$parts = [];
+    	$query = $this->generate_query_body($node);
+	    $query[] = "->get()";
 
-            if ($col['schema'] != '' && strtolower($col['schema']) != 'dbo') {
-            	$parts[] = $col['schema'];
-            }
-            if ($col['table'] != '') {
-            	$parts[] = $col['table'];
-            }
-            $parts[] = $col['column'];
-            return implode('.', $parts);
-        };
+	    $var = '$' . $node->output;
+        $code = "$var = toArray(" . implode("\n", $query) . ");\n";
+        return $code;
+    }
 
+    public function visit_InsertActionNode(InsertActionNode $node)
+    {
+		$query = $this->generate_query_body($node);
+        $code = implode("\n", $query) . ";\n";
+        return $code;
+    }
+
+    public function visit_UpdateActionNode(UpdateActionNode $node)
+    {
+    	$query = $this->generate_query_body($node);
+        $code = implode("\n", $query) . ";\n";
+        return $code;
+    }
+
+    public function visit_DeleteActionNode(DeleteActionNode $node)
+    {
+    	$query = $this->generate_query_body($node);
+    	$query[] = "->delete()";
+
+        $code = implode("\n", $query) . ";\n";
+        return $code;
+    }
+
+    private function render_column($col)
+    {
+    	$parts = [];
+
+        if ($col['schema'] != '' && strtolower($col['schema']) != 'dbo') {
+        	$parts[] = $col['schema'];
+        }
+        if ($col['table'] != '') {
+        	$parts[] = $col['table'];
+        }
+        $parts[] = $col['column'];
+        return implode('.', $parts);
+    }
+
+    private function generate_query_body(QueryBuilderActionNode $node)
+    {
         $query = [];
 
         // Begin query.
-        $var = '$' . $node->output;
         $table = $node->tables[0];
-        $query[] = "$var = toArray(DB::table('$table')";
+        $query[] = "DB::table('$table')";
 
         // Joins.
         for ($i = 1; $i < count($node->tables); $i++) {
         	$join = $node->tables[$i];
-        	$query[] = "\t->join('$join')";
+        	$query[] = "->join('$join')";
         }
 
         // Column names.
         if (count($node->columns)) {
 	        $columns = [];
 	        foreach ($node->columns as $col) {
-	            $columns[] = "'" . $render_column($col) . "'";
+	            $columns[] = "'" . $this->render_column($col) . "'";
 	        }
-	        $query[] = "\t->select(" . implode(', ', $columns) . ")";
+	        $query[] = "->select(" . implode(', ', $columns) . ")";
 	    }
 
 	    // Where clause.
@@ -695,33 +736,57 @@ class ScriptTranslator extends AstVisitor
 	            	default: $op = $item['operator'];
 	            }
 
-	            $column = $render_column($item['column']);
+	            $column = $this->render_column($item['column']);
 	            $value = $this->visit($item['value'], OutputTarget::Expression());
+
+	            if ($op == 'is in') {
+	            	$value = "array_map('trim', explode(',', $value))";
+	            }
+
 	            if (!$item['quotevalue']) {
-	                // DB layer escapes all values by defaults so don't handle the "not quoted" case.
-	                // If not escaping is desired the DB layer supports raw values.
+	            	$value = 'DB::raw(' . $value . ')';
 	            }
 	            
 	            if ($op == 'is in') {
-	            	$query[] = "\t->whereIn('$column', '$op', array_map('trim', explode(',', $value)))";
+	            	$query[] = "->whereIn('$column', '$op', $value)";
 	            } else {
-	            	$query[] = "\t->where('$column', '$op', $value)";
+	            	$query[] = "->where('$column', '$op', $value)";
 	        	}
 	        }
 	    }
 
+	    // Values.
+	    if (count($node->values)) {
+	    	if ($node instanceof InsertActionNode) {
+	    		$query[] = "->insert([";
+	    	} elseif ($node instanceof UpdateActionNode) {
+	    		$query[] = "->update([";
+	    	} else {
+	    		throw new Exception('Node type ' . get_class($node) . ' should not have values');
+	    	}
+
+	        foreach ($node->values as $item) {
+	            $column = $item['name'];
+	            $value = $this->visit($item['value'], OutputTarget::Expression());
+	            if (!$item['quotevalue']) {
+	            	$value = 'DB::raw(' . $value . ')';
+	            }
+	            
+	            $query[] = "'$column' => $value,";
+	        }
+
+	        $query[count($query) - 1] .= "])";
+	    }
+
 	    if ($node->limit !== null) {
-	    	$query[] = "\t->take({$node->limit})";
+	    	$query[] = "->take({$node->limit})";
 	    }
 
 	    if ($node->offset !== null) {
-	    	$query[] = "\t->skip({$node->offset})";
+	    	$query[] = "->skip({$node->offset})";
 	    }
 
-	    $query[] = "\t->get())";
-
-        $code = implode("\n", $query) . ";\n";
-        return $code;
+	    return $query;
     }
 }
 

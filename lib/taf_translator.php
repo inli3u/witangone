@@ -1,8 +1,8 @@
 <?php
 
-require_once('nodes.php');
-require_once('ast_visitor.php');
-require_once('output_target.php');
+require_once(PATH . 'lib/nodes.php');
+require_once(PATH . 'lib/ast_visitor.php');
+require_once(PATH . 'lib/output_target.php');
 
 
 class TafTranslator extends AstVisitor

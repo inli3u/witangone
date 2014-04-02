@@ -10,6 +10,16 @@ class ActionNode extends Node
     public $list = array();
 }
 
+class UnknownActionNode extends ActionNode
+{
+    public $name;
+
+    public function __construct($name = '')
+    {
+        $this->name = $name;
+    }
+}
+
 class ActionNodeList extends ActionNode
 {
 }
@@ -56,15 +66,33 @@ class DirectDBMSActionNode extends ActionNode
 	public $result_type;
 }
 
-class SearchActionNode extends ActionNode
+abstract class QueryBuilderActionNode extends ActionNode
 {
-    public $columns = array();
-    public $tables = array();
-    public $criteria = array();
+    public $columns = [];
+    public $tables = [];
+    public $criteria = [];
     public $limit;
     public $offset;
+    public $values = [];
     public $output = '';
 }
+
+class SearchActionNode extends QueryBuilderActionNode
+{
+}
+
+class UpdateActionNode extends QueryBuilderActionNode
+{
+}
+
+class InsertActionNode extends QueryBuilderActionNode
+{
+}
+
+class DeleteActionNode extends QueryBuilderActionNode
+{
+}
+
 
 
 

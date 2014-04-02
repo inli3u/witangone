@@ -1,6 +1,9 @@
 <?php
 
-require_once('parse_error.php');
+require_once(PATH . 'lib/exceptions/parse_error.php');
+require_once(PATH . 'lib/exceptions/syntax_error.php');
+require_once(PATH . 'lib/exceptions/unknown_symbol_error.php');
+
 
 class GenericParser
 {
@@ -106,13 +109,27 @@ class GenericParser
 		}
 	}
 	
-	public function error($msg)
+	public function getPositionStr()
 	{
-        $code_so_far = substr($this->code, 0, $this->pos + 1);
+		$code_so_far = substr($this->code, 0, $this->pos + 1);
         $lines = explode("\n", $code_so_far);
 		$line = count($lines);
         $char = $this->pos - strrpos($code_so_far, "\n");
-		
-		throw new ParseError($this, $msg . ' on line ' . $line . ', char ' . $char . ': ' . $lines[count($lines) - 1]);
+        return 'line ' . $line . ', char ' . $char . ': ' . $lines[count($lines) - 1];
+	}
+
+	public function error($msg)
+	{
+		throw new ParseError($this, $msg . ' on ' . $this->getPositionStr());
+	}
+
+	public function syntax_error($msg)
+	{
+		throw new SyntaxError($this, $msg . ' on ' . $this->getPositionStr());
+	}
+
+	public function unknown_symbol_error($msg)
+	{
+		throw new UnknownSymbolError($this, $msg . ' on ' . $this->getPositionStr());
 	}
 }

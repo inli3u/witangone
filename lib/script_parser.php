@@ -83,8 +83,8 @@ boolean = factor {('and' | 'or')} factor}
  ----------------------------
 */
 
-require_once('generic_parser.php');
-require_once('nodes.php');
+require_once(PATH . 'lib/generic_parser.php');
+require_once(PATH . 'lib/nodes.php');
 
 class ScriptParser extends GenericParser
 {
@@ -228,21 +228,30 @@ class ScriptParser extends GenericParser
         } elseif ($this->peek('<@')) {
 			
 			$tag_name = $this->read_ident();
+			$missing = false;
 			
 			if (!strlen($tag_name)) {
-				$this->error('Expected meta tag name');
+				$this->syntax_error('Expected meta tag name');
 			}
 			
             $tree = new BlockMetaTagNode();
 			if (!$tree->handles_tag($tag_name)) {
 				$tree = new MetaTagNode();
                 if (!$tree->handles_tag($tag_name)) {
-                    throw new Exception('Unknown meta tag "' . $tag_name . '"');
+                	if (ALLOW_MISSING_SYMBOLS) {
+                		Witangone::track_missing_meta_tag($tag_name);
+                		$missing = true;
+                	} else {
+                    	$this->unknown_symbol_error('Unknown meta tag "' . $tag_name . '"');
+                    }
                 }
 			}
 
 			$tree->name = $tag_name;
             $attr_defs = $tree->get_attr_defs();
+            if (!$attr_defs) {
+            	$attr_defs = [];
+            }
 			$this->info("Tag: " . $tree->name . "\n");
 			
 			// Consume any whitespace.
@@ -259,7 +268,7 @@ class ScriptParser extends GenericParser
 			// Check required attributes.
 			foreach ($attr_defs as $name => $props) {
 				if (@$props[2] === MetaTagNode::REQUIRED && !isset($tree->list[$name])) {
-					$this->error('Meta tag missing required attribute "' . $name . '"');
+					$this->syntax_error('Meta tag missing required attribute "' . $name . '"');
 				}
 			}
 			
@@ -306,7 +315,7 @@ class ScriptParser extends GenericParser
         
 		if (!strlen($attr_name)) {
 			// Maybe there's no attribute here, haven't even checked for a value yet.
-			$this->error('Unnamed attribute not allowed at this position');
+			$this->syntax_error('Unnamed attribute not allowed at this position');
 		}
 
 		// Expecting an optional begining quote.
@@ -340,7 +349,7 @@ class ScriptParser extends GenericParser
 		} elseif ($parse_func === 'variable_ident') {
 			$this->variable_ident($val);
 		} else {
-			$this->error('Unknown parse function');
+			$this->error("Unknown parse function '$parse_func'");
 		}
         
 		//call_user_func(array($this, $parse_func), $a);
@@ -385,7 +394,7 @@ class ScriptParser extends GenericParser
 				$node->value = $op;
 				$node->left = $tree;
 				if (!$this->operand($node->right)) {
-					$this->error('Expected operand on right');
+					$this->syntax_error('Expected operand on right');
 				}
 				$this->whitespace();
 				$tree = $node;
@@ -437,7 +446,7 @@ class ScriptParser extends GenericParser
 				$node->left = $tree;
 				$this->next();
 				if (!$this->term($node->right)) {
-					$this->error('Expected term on right');
+					$this->syntax_error('Expected term on right');
 				}
 				$this->whitespace();
 				$tree = $node;
@@ -458,7 +467,7 @@ class ScriptParser extends GenericParser
 				$node->left = $tree;
 				$this->next();
 				if (!$this->factor($node->right)) {
-					$this->error('Expected factor on right');
+					$this->syntax_error('Expected factor on right');
 				}
 				$this->whitespace();
 				$tree = $node;
@@ -522,7 +531,7 @@ class ScriptParser extends GenericParser
 				$scope = $ident;
 				$name = $this->read_ident();
 				if (!strlen($name)) {
-					$this->error('Expected variable name after scope');
+					$this->syntax_error('Expected variable name after scope');
 				}
 			} else {
 				$scope = '';
@@ -655,7 +664,7 @@ class ScriptParser extends GenericParser
 			$tree = new FilterVariableNode();
 			$tree->name = $this->read_number();
 			if (!strlen($tree->name)) {
-				$this->error('Expected number');
+				$this->syntax_error('Expected number');
 			}
 			return true;
 		}
@@ -705,11 +714,6 @@ class ScriptParser extends GenericParser
 	
 	function is_whitespace() {
 		return false !== @strpos(" \t\r\n", $this->char);
-	}
-	
-	public function error($msg)
-	{
-		parent::error($msg);
 	}
 }
 
