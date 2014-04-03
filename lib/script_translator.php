@@ -196,7 +196,11 @@ class ScriptTranslator extends AstVisitor
 	
 	public function visit_OpNode(OpNode $node)
 	{
-		return $this->visit($node->left) . ' ' . $node->value . ' ' . $this->visit($node->right);
+		if ($node->value == 'contains' || $node->value == 'beginswith' || $node->value == 'endswith') {
+			return 'WitangoLib::' . $node->value . '(' . $this->visit($node->left) . ', ' . $this->visit($node->right) . ')';
+		} else {
+			return $this->visit($node->left) . ' ' . $node->value . ' ' . $this->visit($node->right);
+		}
 	}
 	
 	public function visit_PrefixOpNode(PrefixOpNode $node)
@@ -216,13 +220,27 @@ class ScriptTranslator extends AstVisitor
 
 	public function visit_MetaTagNode(MetaTagNode $node)
 	{
-		// First try special case meta tags.
 		$meta_method = 'meta_' . $node->name;
 		if (method_exists($this, $meta_method)) {
-			return call_user_func(array($this, $meta_method), $node);
+			// First try special case meta tags.
+			$code = call_user_func(array($this, $meta_method), $node);
+		} else {
+			// Then try a lib function.
+			$code = $this->meta_default($node);
 		}
 
-		// Then try a lib function.
+		// Handle encoding options.
+		if ($node->encoding !== null) {
+			$encoding = $this->visit($node->encoding, OutputTarget::Expression());
+			$code = "WitangoLib::encoding({$code}, {$encoding})";
+		}
+
+		return $code;
+	}
+
+	// Handles all non-special case meta tags.
+	public function meta_default($node)
+	{
 		$list = array();
 		foreach ($node->list as $arg_name => $arg) {
 			$list[$arg_name] = $this->visit($arg, OutputTarget::Expression());
@@ -647,9 +665,19 @@ class ScriptTranslator extends AstVisitor
     public function visit_DirectDBMSActionNode(DirectDBMSActionNode $node)
     {
         //die("WHAT THE HELL IS THIS TRANSLATING OF VARIABLE NAMES?!\n");
-        $var = $this->visit($node->list['result_ident'], OutputTarget::Expression());
+
+        $var = null;
+        if ($node->list['result_ident'] !== null) {
+        	$var = $this->visit($node->list['result_ident'], OutputTarget::Expression());
+        }
+        
         $sql = $this->visit($node->list['sql'], OutputTarget::Expression());
-        return "$var = toArray(DB::select($sql));\n"; 
+        $code = "DB::select($sql)";
+
+        if ($var !== null) {
+        	$code = "$var = toArray($code)";
+        }
+        return $code . ";\n"; 
     }
 
     public function visit_SearchActionNode(SearchActionNode $node)
@@ -706,6 +734,10 @@ class ScriptTranslator extends AstVisitor
         // Begin query.
         $table = $node->tables[0];
         $query[] = "DB::table('$table')";
+
+        if ($node->distinct) {
+        	$query[] = "->distinct()";
+        }
 
         // Joins.
         for ($i = 1; $i < count($node->tables); $i++) {

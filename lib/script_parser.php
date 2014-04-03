@@ -261,6 +261,7 @@ class ScriptParser extends GenericParser
 			$attr_pos = 0;
 			while ($this->char !== '>' && $this->meta_tag_attr($tree, $attr_defs, $attr_pos)) {
 				$attr_pos++;
+				$this->whitespace();
 			}
 			
 			$this->expect('>');
@@ -298,7 +299,7 @@ class ScriptParser extends GenericParser
 		// Optional attribute name.
 		$this->set_rewind_point();
 		$this->read_tag_attr_name($attr_name);
-		
+
 		if (!$this->peek('=')) {
 			// We were incorrect in the assumption that we were reading an attr
 			// name.
@@ -353,7 +354,11 @@ class ScriptParser extends GenericParser
 		}
         
 		//call_user_func(array($this, $parse_func), $a);
-		$tree->list[$attr_name] = $val;
+		if ($attr_name == 'encoding') {
+			$tree->encoding = $val;
+		} else {
+			$tree->list[$attr_name] = $val;
+		}
 
 		// End with matching quote, if quoted.
 		$closing_quote = array_pop($this->quote_stack);
@@ -382,9 +387,9 @@ class ScriptParser extends GenericParser
 			$this->whitespace();
 			
 			while (true) {
-				if ($this->peek('and')) {
+				if ($this->peek('and') || $this->peek('&&')) {
 					$op = '&&';
-				} elseif ($this->peek('or')) {
+				} elseif ($this->peek('or') || $this->peek('||')) {
 					$op = '||';
 				} else {
 					break;
@@ -416,7 +421,7 @@ class ScriptParser extends GenericParser
 			// It's important to peek() longer strings first, in case a shorter
 			// string actually matches the beginning of a longer one as with
 			// '<' and '<='.
-			foreach (array('!=', '<=', '>=', '=', '<', '>') as $symbol) {
+			foreach (array('!=', '<=', '>=', '=', '<', '>', 'contains', 'beginswith', 'endswith') as $symbol) {
 				if ($this->peek($symbol)) {
 					$found = true;
 					break;
@@ -572,7 +577,7 @@ class ScriptParser extends GenericParser
 		if ($this->peek('len(')) {
 			$tree = new ExpressionFuncNode();
 			$tree->name = 'len';
-			$this->string($tree->child);
+			$this->expression($tree->child);
 			$this->expect(')');
 			
 			$this->info('exit expression_func true');
@@ -620,14 +625,26 @@ class ScriptParser extends GenericParser
 				$terminator = ' ';
 			}
 		}
-		
+
 		// This is a string only if we have determined a terminator char.
 		if ($terminator !== null) {
 			$tree = new StringNode();
 			$text = new TextNode();
 			$n = null;
 			
-			while ($this->char !== $terminator && $this->char !== ')' && $this->char !== '>') {
+			while (true) {
+				if ($terminator == ' ') {
+					// Unquoted string. Break when special char/whitespace found.
+					if ($this->is_whitespace() || $this->char === '"' || $this->char === "'" || $this->char === '>') {
+						break;
+					}
+				} else {
+					// Quoted string. Break when ending quote found.
+					if ($this->char === $terminator) {
+						break;
+					}
+				}
+
 				//echo $this->char . "\n";
 				if ($this->variable($n) || $this->meta_tag($n)) {
 					if (strlen($text->value)) {

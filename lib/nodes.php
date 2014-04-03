@@ -68,6 +68,7 @@ class DirectDBMSActionNode extends ActionNode
 
 abstract class QueryBuilderActionNode extends ActionNode
 {
+    public $distinct = false;
     public $columns = [];
     public $tables = [];
     public $criteria = [];
@@ -103,6 +104,7 @@ class ScriptNode extends Node
 	public $value;
 	public $body = false;
 	public $line = 0;
+    public $encoding;
 
 	public function __construct() {}
 

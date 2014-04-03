@@ -210,12 +210,11 @@ class TafParser
             }
         }
 
-        $columns = [];
-        if ($action->SearchColumns) {
-            foreach ($action->SearchColumns->children() as $col) {
+        // Search data dictionary for table names that might not be specified in the Tables section. Yeah.
+        if ($action->DataDictionary) {
+            foreach ($action->DataDictionary->children() as $col) {
                 $column = $this->get_column_info((string)$col->TableName, (string)$col->ColumnName);
-                $columns[] = $column;
-                // Tables can be defined in the column without being mentioned in the Tables section.
+                // Tables can be defined here Tables section.
                 if (strlen($column['table'])) {
                     if ($column['schema'] != '' && $column['schema'] != 'dbo') {
                         $tables[] = $column['schema'] . '.' . $column['table'];
@@ -223,6 +222,14 @@ class TafParser
                         $tables[] = $column['table'];
                     }
                 }
+            }
+        }
+
+        $columns = [];
+        if ($action->SearchColumns) {
+            foreach ($action->SearchColumns->children() as $col) {
+                $column = $this->get_column_info((string)$col->TableName, (string)$col->ColumnName);
+                $columns[] = $column;
             }
         }
 
@@ -255,11 +262,15 @@ class TafParser
         }
 
         $tables = array_values(array_unique($tables));
+        if (!count($tables)) {
+            throw new ParseError(null, "At least one table is required for database actions. At action '" . $action['ID'] . "'.");
+        }
 
         $tree->tables = $tables;
         $tree->columns = $columns;
         $tree->criteria = $criteria;
         $tree->values = $values;
+        $tree->distinct = (strtolower($action['DistinctRows']) == "true");
 
         if ($action->MaxRows && strlen($action->MaxRows) > 0) {
             $tree->limit = (int)$action->MaxRows;
