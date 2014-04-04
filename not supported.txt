@@ -1,0 +1,43 @@
+NOT SUPPORTED
+
+Just a loose list of things I know are not supported yet.
+
+
+General
+- Renaming of referenced taf/tml/html files to php equiv.
+- Comments (outputting, they are parsed already.)
+- Picking a column from an array I think is not supported. Example: <@assign request$emails @@request$rows[*, 1]>
+
+
+SQL
+- Aggregate functions
+- OR conditions
+- Nested conditions
+- Running success/failure code
+
+
+OPERATORS
+
+;		Sub-statement separator, returns the value of the last statement.
+
+:=		Assignment operator, assigns the value of the expression to the calculation variable, and returns that value.
+
+? :		Ternary comparison. Evaluates to expr1 if condition is true, or to expr2 otherwise
+
+–		Unary minus. Returns the negation of the expression.
+
+NOT 	Logical NOT. Returns 0 if the value of the expression is not 0, or 1 otherwise.
+		! is supported, NOT is not
+
+foreach {}
+
+
+NUMBERS
+- Use of thousands separator in numbers.
+
+
+NICE TO HAVE
+- Add automatic PHP -l syntax check for each outputted file.
+- if a string is just numbers, output as number instead.
+- if an array accessor is index by number output the result of that number - 1 instead of outputting the - 1.
+- for tml/html files, instead of echoing everything, use the PHP open/close tags.

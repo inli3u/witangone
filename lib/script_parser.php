@@ -3,7 +3,7 @@
 /*
 
 Go back to string-based parsing
-need to be able to peek('and') for boolean operators
+need to be able to advance('and') for boolean operators
 
 add boolean operators:
 
@@ -88,26 +88,103 @@ require_once(PATH . 'lib/nodes.php');
 
 class ScriptParser extends GenericParser
 {
+	const WHITESPACE = 1;
+
 	private static $block_start_tags = array('comment', 'debug', 'if', 'ifequal', 'ifempty', 'ifnotempty', 'elseif', 'else', 'for', 'rows');
 	private static $block_end_tags = array('elseif', 'else', '/comment', '/debug', '/if', '/for', '/rows');
-	private $quote_stack = array();
+	private $paired_brace_stack = array();
+	private $breakpoint_stack = array();
 	private $deferred_meta_node = null;
 	public $tokens = array();
 	public $debug = false;
 	
-	public function get_current_quote()
+	private function get_current_quote()
 	{
-		return @$this->quote_stack[count($this->quote_stack) - 1];
+		for ($i = count($this->paired_brace_stack) - 1; $i >= 0; $i--) {
+			$str = $this->paired_brace_stack[$i];
+			if ($str == '"' || $str == "'") {
+				return $str;
+			}
+		}
+
+		return null;
 	}
 	
-	public function get_inversed_quote()
+	private function get_inversed_quote()
 	{
-		if ($this->get_current_quote() === ' ') {
-			return ' ';
-		} else {
-			return ($this->get_current_quote() == '"') ? "'" : '"';
+		$quote = $this->get_current_quote();
+		if ($quote !== null) {
+			return ($quote == '"') ? "'" : '"';
 		}
+
+		return null;
 	}
+
+	private function push_paired_brace($str)
+	{
+		array_push($this->paired_brace_stack, $str);
+	}
+
+	private function pop_paired_brace()
+	{
+		return array_pop($this->paired_brace_stack);
+	}
+
+	private function is_paired_brace()
+	{
+		if (!count($this->paired_brace_stack)) {
+			return false;
+		}
+
+		$str = $this->paired_brace_stack[count($this->paired_brace_stack) - 1];
+		if ($str === null) {
+			return false;
+		}
+
+		return $this->peek($str);
+	}
+
+	private function push_breakpoint($breakpoint)
+	{
+		$list = is_array($breakpoint) ? $breakpoint : [$breakpoint];
+		array_push($this->breakpoint_stack, $list);
+	}
+
+	private function pop_breakpoint()
+	{
+		return array_pop($this->breakpoint_stack);
+	}
+
+	/**
+	 * Check if we've hit the breakpoint on top of the stack.
+	 */
+	private function is_breakpoint()
+	{
+		if (!count($this->breakpoint_stack)) {
+			return false;
+		}
+
+		$list = $this->breakpoint_stack[count($this->breakpoint_stack) - 1];
+		if ($list === null) {
+			return false;
+		}
+
+		foreach ($list as $breakpoint) {
+			if (is_string($breakpoint)) {
+				if ($this->peek($breakpoint)) {
+					return true;
+				}
+			} else {
+				if ($breakpoint === self::WHITESPACE && $this->is_whitespace()) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+
 
 	// A few convenience methods
 	public static function get_expression($code)
@@ -148,19 +225,13 @@ class ScriptParser extends GenericParser
 			
 			if ($this->meta_comment($meta_node) || $this->meta_tag($meta_node) || $this->variable($meta_node)) {
 				// Noop.
-			} elseif ($this->char === $this->get_current_quote()) {
-				// Break if we are in quotes and found matching quote.
+			} elseif ($this->is_breakpoint() || $this->is_eof()) {
+				// Break due to matching quotes/braces, a breakpoint, or EOF.
 				// Do not advance input.
-				$more = false;
-			} elseif ($this->get_current_quote() === ' ' && ($this->is_whitespace() || $this->char === '>')) {
-				// Break if we are in a quotable section that isn't quoted, and
-				// we hit whitespace or end of tag.
-				// Do not advance input.
-				$more = false;
-			} elseif ($this->is_eof()) {
 				$more = false;
 			} else {
-				$text_node->value .= $this->char;
+				// Non-code goes into a text node.
+				$text_node->value .= $this->char();
 				$this->next_raw();
 			}
 
@@ -213,7 +284,7 @@ class ScriptParser extends GenericParser
 	// meta_tag = ('<@' | '</@') name {[attr_name '='] ['"'] fragment ['"']} '>'
 	function meta_tag(&$tree)
 	{
-        if ($this->peek('</@')) {
+        if ($this->advance('</@')) {
             // This should actually be a stand alone bit of grammer.
             $tag_name = $this->read_ident();
             $this->info('Tag: Peeked start of an end tag "' . $tag_name . '"');
@@ -225,7 +296,7 @@ class ScriptParser extends GenericParser
             
             return true;
 
-        } elseif ($this->peek('<@')) {
+        } elseif ($this->advance('<@')) {
 			
 			$tag_name = $this->read_ident();
 			$missing = false;
@@ -259,7 +330,7 @@ class ScriptParser extends GenericParser
 
 			// Consume attributes.
 			$attr_pos = 0;
-			while ($this->char !== '>' && $this->meta_tag_attr($tree, $attr_defs, $attr_pos)) {
+			while ($this->char() !== '>' && $this->meta_tag_attr($tree, $attr_defs, $attr_pos)) {
 				$attr_pos++;
 				$this->whitespace();
 			}
@@ -289,7 +360,7 @@ class ScriptParser extends GenericParser
     // TODO: this is having trouble with the following code <@assign request$var 'text'>
 	function meta_tag_attr(&$tree, $attr_defs, $attr_pos = 0)
 	{
-		if ($this->char === '>') {
+		if ($this->char() === '>') {
 			return false;
 		}
 		
@@ -298,9 +369,10 @@ class ScriptParser extends GenericParser
 
 		// Optional attribute name.
 		$this->set_rewind_point();
+		$this->whitespace();
 		$this->read_tag_attr_name($attr_name);
 
-		if (!$this->peek('=')) {
+		if (!$this->advance_ws('=')) {
 			// We were incorrect in the assumption that we were reading an attr
 			// name.
 			$this->rewind();
@@ -319,22 +391,27 @@ class ScriptParser extends GenericParser
 			$this->syntax_error('Unnamed attribute not allowed at this position');
 		}
 
+		$this->whitespace();
+
 		// Expecting an optional begining quote.
-		if (count($this->quote_stack)) {
-			$quote = $this->get_inversed_quote();
-			if ($quote !== ' ' && !$this->peek($quote)) {
-				$quote = ' ';
-			}
+		$char = $this->char();
+		if ($char == '"' || $char == "'") {
+			// Quoted value.
+
+			// I thought alternating nested quotes were enforced, but apparently Witango does not care.
+			// $inversed = $this->get_inversed_quote();
+			// if (strlen($inversed) && $char != $inversed) {
+			// 	$this->syntax_error('Unexpected ' . $char);
+			// }
+
+			$this->push_breakpoint($char);
+			$this->move(1);
+			$quote_char = $char;
 		} else {
-			if ($this->peek('"')) {
-				$quote = '"';
-			} elseif ($this->peek("'")) {
-				$quote = "'";
-			} else {
-				$quote = ' ';
-			}
+			// Unquoted value.
+			$this->push_breakpoint([self::WHITESPACE, '>']);
+			$quote_char = null;
 		}
-		array_push($this->quote_stack, $quote);
 
 		// Followed by a value.
 		// Lookup expected node type.
@@ -348,7 +425,20 @@ class ScriptParser extends GenericParser
 		} elseif ($parse_func === 'expression') {
 			$this->expression($val);
 		} elseif ($parse_func === 'variable_ident') {
+			// Witango seems to allow the '@@scope$name' syntax in attributes that call for just 'scope$name'.
+
 			$this->variable_ident($val);
+
+			if (!$val) {
+				if ($this->variable($val)) {
+					// Extract VariableIdentNode from VariableNode.
+					$val = $val->child;
+				}
+			}
+
+			if (!$val) {
+				$this->syntax_error('Expected variable name');
+			}
 		} else {
 			$this->error("Unknown parse function '$parse_func'");
 		}
@@ -360,10 +450,11 @@ class ScriptParser extends GenericParser
 			$tree->list[$attr_name] = $val;
 		}
 
+		$this->pop_breakpoint();
+
 		// End with matching quote, if quoted.
-		$closing_quote = array_pop($this->quote_stack);
-		if ($quote !== ' ') {
-			$this->expect($closing_quote);
+		if ($quote_char !== null) {
+			$this->expect($quote_char);
 		}
 		
 		return true;
@@ -379,31 +470,31 @@ class ScriptParser extends GenericParser
 		return false;
 	}
 	
+	// Expression func
 	// expression = operand {('and' | 'or') operand}
 	function expression(&$tree)
 	{
 		$this->info('enter expression');
+		$this->whitespace();
 		if ($this->operand($tree)) {
-			$this->whitespace();
-			
 			while (true) {
-				if ($this->peek('and') || $this->peek('&&')) {
+				$this->whitespace();
+				if ($this->advance('and') || $this->advance('&&')) {
 					$op = '&&';
-				} elseif ($this->peek('or') || $this->peek('||')) {
+				} elseif ($this->advance('or') || $this->advance('||')) {
 					$op = '||';
 				} else {
 					break;
 				}
 				
+				$this->whitespace();
 				$node = new OpNode();
 				$node->value = $op;
 				$node->left = $tree;
 				if (!$this->operand($node->right)) {
 					$this->syntax_error('Expected operand on right');
 				}
-				$this->whitespace();
 				$tree = $node;
-				
 			}
 			$this->info('exit expression true');
 			return true;
@@ -412,21 +503,25 @@ class ScriptParser extends GenericParser
 		return false;
 	}
 	
+	// Expression func
 	// operand = math_expression [('=' '!=' '<' '<=' '>' >=') math_expression]
 	function operand(&$tree)
 	{
+		$this->whitespace();
 		$left = null;
 		if ($this->math_expression($left) || $this->string($left)) {
+			$this->whitespace();
 			$found = false;
-			// It's important to peek() longer strings first, in case a shorter
+			// It's important to advance() longer strings first, in case a shorter
 			// string actually matches the beginning of a longer one as with
 			// '<' and '<='.
 			foreach (array('!=', '<=', '>=', '=', '<', '>', 'contains', 'beginswith', 'endswith') as $symbol) {
-				if ($this->peek($symbol)) {
+				if ($this->advance($symbol)) {
 					$found = true;
 					break;
 				}
 			}
+			$this->whitespace();
 			if ($found) {
 				$tree = new OpNode();
 				$tree->value = ($symbol === '=') ? '==' : $symbol;
@@ -440,16 +535,19 @@ class ScriptParser extends GenericParser
 		return false;
 	}
 
+	// Expression func
 	// math_expression = term {('+' | '-') term}
 	function math_expression(&$tree)
 	{
+		$this->whitespace();
 		if ($this->term($tree)) {
 			$this->whitespace();
-			while ($this->char === '+' || $this->char === '-') {
+			while ($this->char() === '+' || $this->char() === '-') {
 				$node = new OpNode();
-				$node->value = $this->char;
+				$node->value = $this->char();
+				$this->move(1);
 				$node->left = $tree;
-				$this->next();
+				$this->whitespace();
 				if (!$this->term($node->right)) {
 					$this->syntax_error('Expected term on right');
 				}
@@ -461,16 +559,43 @@ class ScriptParser extends GenericParser
 		return false;
 	}
 
+	// Expression func
 	// term = factor {('*' | '/') factor}
 	function term(&$tree)
 	{
+		$this->whitespace();
+		if ($this->power($tree)) {
+			$this->whitespace();
+			while ($this->char() === '*' || $this->char() === '/' || $this->char() === '%') {
+				$node = new OpNode();
+				$node->value = $this->char();
+				$this->move(1);
+				$node->left = $tree;
+				$this->whitespace();
+				if (!$this->power($node->right)) {
+					$this->syntax_error('Expected power on right');
+				}
+				$this->whitespace();
+				$tree = $node;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	// Expression func
+	// term = factor {('*' | '/') factor}
+	function power(&$tree)
+	{
+		$this->whitespace();
 		if ($this->factor($tree)) {
 			$this->whitespace();
-			while ($this->char === '*' || $this->char === '/') {
+			while ($this->char() === '^') {
 				$node = new OpNode();
-				$node->value = $this->char;
+				$node->value = $this->char();
+				$this->move(1);
 				$node->left = $tree;
-				$this->next();
+				$this->whitespace();
 				if (!$this->factor($node->right)) {
 					$this->syntax_error('Expected factor on right');
 				}
@@ -482,31 +607,34 @@ class ScriptParser extends GenericParser
 		return false;
 	}
 
-	// operand = meta_tag | variable | expression_func | number | string | parens
+	// Expression func
+	// factor = meta_tag | variable | expression_func | number | string | parens
 	function factor(&$tree)
 	{
 		$this->info('enter factor');
-		if ($this->peek('!')) {
+		if ($this->advance_ws('!')) {
 			$tree = new PrefixOpNode();
 			$tree->value = '!';
 			// Same as below, minus string().
 			$n = null;
+			$this->whitespace();
 			$status = $this->meta_tag($n) || $this->variable($n) || $this->expression_func($n) || $this->number($n) || $this->parens($n);
 			$tree->child = $n;
 			$this->info('exit factor');
 			return $status;
 		} else {
 			$this->info('exit factor');
+			$this->whitespace();
 			return $this->meta_tag($tree) || $this->variable($tree) || $this->expression_func($tree) || $this->number($tree) || $this->filter_variable($tree) || $this->parens($tree);
 		}
 	}
 
 	// meta_comment = '<@!' {char} '>'
 	function meta_comment(&$tree) {
-		if ($this->peek('<@!')) {
+		if ($this->advance('<@!')) {
 			$tree = new CommentNode();
-			while ($this->char !== '>') {
-				$tree->value .= $this->char;
+			while ($this->char() !== '>') {
+				$tree->value .= $this->char();
 				$this->next_raw();
 			}
 			$this->expect('>');
@@ -519,7 +647,7 @@ class ScriptParser extends GenericParser
 	// '@@' variable_ident 
 	function variable(&$tree)
 	{
-		if ($this->peek('@@')) {
+		if ($this->advance('@@')) {
 			$tree = new VariableNode();
 			$this->variable_ident($tree->child);
 			return true;
@@ -532,7 +660,7 @@ class ScriptParser extends GenericParser
 	{
 		$ident = strtolower($this->read_ident());
 		if (strlen($ident)) {
-			if ($this->peek('$')) {
+			if ($this->advance('$')) {
 				$scope = $ident;
 				$name = $this->read_ident();
 				if (!strlen($name)) {
@@ -555,30 +683,33 @@ class ScriptParser extends GenericParser
 	// '[' number {',' number } ']'
 	function array_accessor(&$tree)
 	{
-		if ($this->peek('[')) {
+		if ($this->advance('[')) {
 			$tree = new ArrayAccessorNode();
 
-            // TODO: should this be an expression? check the manual.
-			$this->expression($tree->list[0]);
-			
+            $this->push_breakpoint([']', ',']);
+            $this->whitespace();
+			$this->fragment($tree->list[0]);
 			$i = 1;
-			while ($this->peek(',')) {
-				$this->number($tree->list[$i++]);
+			while ($this->advance_ws(',')) {
+				$this->whitespace();
+				$this->fragment($tree->list[$i++]);
 			}
-			$this->expect(']');
+			$this->pop_breakpoint();
+			$this->expect_ws(']');
 			return true;
 		}
 		return false;
 	}
 	
+	// Expression func
 	function expression_func(&$tree)
 	{
 		$this->info('enter expression_func');
-		if ($this->peek('len(')) {
+		if ($this->advance_ws('len(')) {
 			$tree = new ExpressionFuncNode();
 			$tree->name = 'len';
 			$this->expression($tree->child);
-			$this->expect(')');
+			$this->expect_ws(')');
 			
 			$this->info('exit expression_func true');
 			return true;
@@ -587,13 +718,12 @@ class ScriptParser extends GenericParser
 		return false;
 	}
 	
+	// Expression func
 	function number(&$tree)
 	{
-		if ($this->is_digit($this->char)) {
-			$value = $this->char;
-			while ($this->is_digit($this->next())) {
-				$value .= $this->char;
-			}
+		$this->whitespace();
+		$value = $this->read_number();
+		if ($value !== false) {
 			$tree = new NumberNode();
 			$tree->value = (int)$value;
 			return true;
@@ -601,6 +731,7 @@ class ScriptParser extends GenericParser
 		return false;
 	}
 	
+	// Expression func
 	// Strings are awfully similar to fragments... except:
 	// - they can't handle block tags. Do they need to?
 	// - they detect quoting.
@@ -609,19 +740,20 @@ class ScriptParser extends GenericParser
 	function string(&$tree)
 	{
 		$this->info('enter string');
+		$this->whitespace();
 		
 		// Does string start with a quote?
 		$quote = $this->get_inversed_quote();
-		$is_quoted = ($quote && $this->peek($quote));
-		$is_quoted = ($is_quoted || $this->peek($quote = '"'));
-		$is_quoted = ($is_quoted || $this->peek($quote = "'"));
+		$is_quoted = (strlen($quote) && $this->advance($quote));
+		$is_quoted = ($is_quoted || $this->advance($quote = '"'));
+		$is_quoted = ($is_quoted || $this->advance($quote = "'"));
 		
 		$terminator = null;
 		if ($is_quoted) {
 			$terminator = $quote;
 		} else {
 			// Non-quoted string?
-			if ($this->is_alpha($this->char)) {
+			if ($this->is_alpha($this->char())) {
 				$terminator = ' ';
 			}
 		}
@@ -635,17 +767,17 @@ class ScriptParser extends GenericParser
 			while (true) {
 				if ($terminator == ' ') {
 					// Unquoted string. Break when special char/whitespace found.
-					if ($this->is_whitespace() || $this->char === '"' || $this->char === "'" || $this->char === '>') {
+					if ($this->is_whitespace() || $this->char() === '"' || $this->char() === "'" || $this->char() === '>') {
 						break;
 					}
 				} else {
 					// Quoted string. Break when ending quote found.
-					if ($this->char === $terminator) {
+					if ($this->char() === $terminator) {
 						break;
 					}
 				}
 
-				//echo $this->char . "\n";
+				//echo $this->char() . "\n";
 				if ($this->variable($n) || $this->meta_tag($n)) {
 					if (strlen($text->value)) {
 						$tree->list[] = $text;
@@ -653,7 +785,7 @@ class ScriptParser extends GenericParser
 					}
 					$tree->list[] = $n;
 				} else {
-					$text->value .= $this->char;
+					$text->value .= $this->char();
 					$this->next_raw();
 				}
 			}
@@ -675,9 +807,10 @@ class ScriptParser extends GenericParser
 		return false;
 	}
 	
+	// Expression func
 	function filter_variable(&$tree)
 	{
-		if ($this->peek('#')) {
+		if ($this->advance_ws('#')) {
 			$tree = new FilterVariableNode();
 			$tree->name = $this->read_number();
 			if (!strlen($tree->name)) {
@@ -688,13 +821,14 @@ class ScriptParser extends GenericParser
 		return false;
 	}
 	
+	// Expression func
 	function parens(&$tree)
 	{
 		$this->info('enter parens');
-		if ($this->peek('(')) {
+		if ($this->advance_ws('(')) {
 			$tree = new ParenNode();
 			$this->expression($tree->child);
-			$this->expect(')');
+			$this->expect_ws(')');
 			$this->info('exit parens true');
 			return true;
 		}
@@ -705,32 +839,21 @@ class ScriptParser extends GenericParser
 	function read_number()
 	{
 		$num = false;
-		while ($this->is_digit($this->char)) {
-			$num .= $this->char;
-			$this->next_raw();
+		while ($this->is_digit($char = $this->char())) {
+			$num .= $char;
+			$this->move(1);
 		}
 		return $num;
 	}
 	
 	function read_ident()
 	{
-		$ident = false;
-		while ($this->is_alpha_numeric($this->char)) {
-			$ident .= $this->char;
-			$this->next_raw();
+		$ident = '';
+		while ($this->is_alpha_numeric($char = $this->char())) {
+			$ident .= $char;
+			$this->move(1);
 		}
 		return strtolower($ident);
-	}
-
-	function whitespace()
-	{
-		while ($this->is_whitespace()) {
-			$this->next();
-		}
-	}
-	
-	function is_whitespace() {
-		return false !== @strpos(" \t\r\n", $this->char);
 	}
 }
 

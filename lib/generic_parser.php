@@ -30,6 +30,11 @@ class GenericParser
 		return $this->char = @$this->code[++$this->pos];
 	}
 
+	function move($distance)
+	{
+		$this->pos += $distance;
+	}
+
 	function next($distance = 1)
 	{
 		$i = 0;
@@ -52,6 +57,11 @@ class GenericParser
 		return @$this->code[$this->pos + 1];
 	}
 
+	function char($offset = 0)
+	{
+		return @$this->code[$this->pos + $offset];
+	}
+
 	function is_digit($char)
 	{
 		return $char >= '0' && $char <= '9';
@@ -71,17 +81,37 @@ class GenericParser
 	{
 		$len = strlen($str);
 		if (0 === strcasecmp($str, substr($this->code, $this->pos, $len))) {
-			$this->next($len);
 			return true;
 		}
 		return false;
 	}
+
+	public function advance($str)
+	{
+		if ($this->peek($str)) {
+			$this->move(strlen($str));
+			return true;
+		}
+		return false;
+	}
+
+	public function advance_ws($str)
+	{
+		$this->whitespace();
+		return $this->advance($str);
+	}
 	
 	public function expect($str)
 	{
-		if (!$this->peek($str)) {
+		if (!$this->advance($str)) {
 			$this->error('Expected ' . $str);
 		}
+	}
+
+	public function expect_ws($str)
+	{
+		$this->whitespace();
+		return $this->expect($str);
 	}
 	
 	public function set_rewind_point()
@@ -93,6 +123,17 @@ class GenericParser
 	{
 		$this->pos = $this->rewind_pos;
 		$this->char = @$this->code[$this->pos];
+	}
+
+	function whitespace()
+	{
+		while ($this->is_whitespace()) {
+			$this->move(1);
+		}
+	}
+	
+	function is_whitespace() {
+		return false !== @strpos(" \t\r\n", $this->char());
 	}
 	
 	public function debug($msg)

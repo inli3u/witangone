@@ -12,7 +12,7 @@ I'm working toward a specific goal at the moment: to convert the handful of Tera
 
 ## Coverage
 
-This is a moving target but is improving quickly. I currently can compile 81% of the 110 files in one of our applications. Most of the issues are fairly small at the moment and I expect to be at 100% shortly. When work settles down I'll list out the specific language featues that are supported.
+This is a moving target but is improving quickly. I currently can compile 97% of the 115 files in one of our applications. Most of the issues are fairly small at the moment and I expect to be at 100% shortly. When work settles down I'll list out the specific language featues that are supported.
 
 ## Usage
 

@@ -135,11 +135,18 @@ class ScriptTranslator extends AstVisitor
 
 			if ($target->is_expression() && $child_node->is_complex()) {
 
+				$temp_ident_node = null;
 				if ('else' == substr($child_node->name, 0, 4)) {
 					// Else statements should use same temp var name as previous if statement
-					list($temp_ident_node) = $this->extracted_complex_nodes[count($this->extracted_complex_nodes) - 1];
-					$replacement_node = new NoopNode();
-				} else {
+					if (!count($this->extracted_complex_nodes)) {
+						// TODO: this is suspect. If this condition happens, should check the translation.
+					} else {
+						list($temp_ident_node) = $this->extracted_complex_nodes[count($this->extracted_complex_nodes) - 1];
+						$replacement_node = new NoopNode();
+					}
+				}
+
+				if (!$temp_ident_node) {
 					// Non-else statements should make a new name.
 					$temp_ident_node = new VariableIdentNode('temp' . (count($this->extracted_complex_nodes) + 1));
 					$replacement_node = new VariableNode();
@@ -154,7 +161,7 @@ class ScriptTranslator extends AstVisitor
 
 			// Generate code from node.
 			$result = $this->visit($child_node);
-			if ($result === false) {
+			if (!strlen($result)) {
 				// Translation resulted in no output, possibly because of a noop.
 				continue;
 			}
@@ -543,7 +550,7 @@ class ScriptTranslator extends AstVisitor
 		
 		if ($node->array_accessor) {
 			foreach ($node->array_accessor->list as $value) {
-				$value_str = $this->visit($value);
+				$value_str = $this->visit($value, OutputTarget::Expression());
 				if (is_numeric($value_str)) {
 					$src .= '[' . ($value_str - 1) . ']';
 				} else {
@@ -757,33 +764,42 @@ class ScriptTranslator extends AstVisitor
 	    // Where clause.
 	    if (count($node->criteria)) {
 	        foreach ($node->criteria as $item) {
-	            switch ($item['operator']) {
-		            case 'iseq': $op = '='; break;
-		            case 'gthn': $op = '>'; break;
-		            case 'lthn': $op = '<'; break;
-		            case 'gteq': $op = '>='; break;
-		            case 'lteq': $op = '<='; break;
-		            case 'isnt': $op = '<>'; break;
-		            case 'isin': $op = 'is in'; break;
-	            	default: $op = $item['operator'];
-	            }
-
 	            $column = $this->render_column($item['column']);
 	            $value = $this->visit($item['value'], OutputTarget::Expression());
 
-	            if ($op == 'is in') {
+	            // Special handling for 'is in', Witango works off of a comma-delimited string, DB builder needs an array.
+	            if ($item['operator'] == 'isin') {
 	            	$value = "array_map('trim', explode(',', $value))";
 	            }
 
+	            // Unquoted values are opt-in.
 	            if (!$item['quotevalue']) {
 	            	$value = 'DB::raw(' . $value . ')';
 	            }
-	            
-	            if ($op == 'is in') {
-	            	$query[] = "->whereIn('$column', '$op', $value)";
-	            } else {
-	            	$query[] = "->where('$column', '$op', $value)";
-	        	}
+
+	            switch ($item['operator']) {
+		            case 'iseq': $op = '=';
+		            case 'gthn': $op = '>';
+		            case 'lthn': $op = '<';
+		            case 'gteq': $op = '>=';
+		            case 'lteq': $op = '<=';
+		            case 'isnt': $op = '<>';
+		            	$query[] = "->where('$column', '$op', $value)";
+		            	break;
+		            case 'isin':
+		            	$query[] = "->whereIn('$column', '$op', $value)";
+		            	break;
+		            case 'inul':
+		            	$query[] = "->whereNull('$column')";
+		            	break;
+		            case 'nnul': 
+		            	$query[] = "->whereNotNull('$column')";
+		            	break;
+	            	default:
+	            		$op = $item['operator'];
+	            		$query[] = "->where('$column', '$op', $value)";
+		            	break;
+	            }
 	        }
 	    }
 
