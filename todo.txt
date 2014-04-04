@@ -1,6 +1,0 @@
-1. Add Laravel's DB layer to include path - 1 hr
-1. a. Overall include/autoload scheme. Laravel uses namespaces.
-1. b. Placement and loading of config file.
-2. Use new DB api for query builder - 30 min
-3. Add update, insert, and delete. - 2 hr
-4. Add @choicelist meta tag. - 2 hr
